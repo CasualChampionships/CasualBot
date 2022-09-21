@@ -8,6 +8,7 @@ import com.mongodb.client.model.Updates
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.Role
 import org.bson.Document
+import util.CommandUtil
 import util.EmbedUtil
 
 class DataBase(url: String) {
@@ -55,6 +56,13 @@ class DataBase(url: String) {
     fun getTeamLogo(teamName: String): String? {
         val team = getTeamDocument(teamName) ?: return null
         return team.getString("logo")
+    }
+
+    fun getPlayerStats(username: String) {
+        val name = CommandUtil.getCorrectName(username)
+        val result = totalStats.find(Filters.eq("name", name)).first()
+        result ?: return TODO()
+
     }
 
     private fun getTeamDocument(teamName: String): Document? {

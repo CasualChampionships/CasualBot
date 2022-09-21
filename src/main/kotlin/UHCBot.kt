@@ -3,6 +3,7 @@ import database.DataBase
 import event.EventHandler
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.internal.utils.JDALogger
+import util.ImageUtil
 import java.nio.file.Path
 
 val LOGGER = JDALogger.getLog("UHC Bot")
@@ -16,7 +17,15 @@ val BOT by lazy {
 }
 
 fun main() {
-    BOT
+    ImageUtil.playerStatsImage(
+        "senseiwells",
+        mapOf(
+            "damage dealt" to 10,
+            "damage taken" to 0,
+            "kills" to "99",
+            "deaths" to "none"
+        )
+    )
 }
 
 class UHCBot(token: String, mongo: String, guild: Long) {

@@ -54,6 +54,15 @@ object CommandUtil {
         return false
     }
 
+    fun getCorrectName(username: String): String? {
+        return try {
+            val uuid = MOJANK.getUUIDOfUsername(username)
+            MOJANK.getPlayerProfile(uuid).username
+        } catch (e: RuntimeException) {
+            null
+        }
+    }
+
     fun Role.isServerRole(): Boolean = !CONFIG.nonTeams.contains(name) && isHoisted
 
     fun SlashCommandData.addServerArgument() {
@@ -79,12 +88,8 @@ object CommandUtil {
 
     fun GenericCommandInteractionEvent.getPlayer(invalid: (String) -> Unit): String? {
         val username = getOption<String>("username")!!
-        return try {
-            val uuid = MOJANK.getUUIDOfUsername(username)
-            MOJANK.getPlayerProfile(uuid).username
-        } catch (e: RuntimeException) {
-            invalid(username)
-            null
-        }
+        val name = getCorrectName(username)
+        name ?: invalid(username)
+        return name
     }
 }
