@@ -5,11 +5,14 @@ import com.mongodb.MongoClient
 import com.mongodb.MongoClientURI
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
+import dev.minn.jda.ktx.messages.Embed
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.Role
+import net.dv8tion.jda.api.utils.FileUpload
 import org.bson.Document
 import util.CommandUtil
 import util.EmbedUtil
+import util.ImageUtil
 
 class DataBase(url: String) {
     val client = MongoClient(MongoClientURI(url))
@@ -58,11 +61,14 @@ class DataBase(url: String) {
         return team.getString("logo")
     }
 
-    fun getPlayerStats(username: String) {
+    fun getPlayerStats(username: String): Pair<MessageEmbed, FileUpload?> {
         val name = CommandUtil.getCorrectName(username)
+        name ?: return EmbedUtil.noStatsEmbed(username) to null
         val result = totalStats.find(Filters.eq("name", name)).first()
-        result ?: return TODO()
-
+        result ?: return EmbedUtil.noStatsEmbed(name) to null
+        val imageName = "${username}_stats.png"
+        val image = ImageUtil.playerStatsImage(name, result, imageName)
+        return EmbedUtil.playerStatsEmbed(name, imageName) to image
     }
 
     private fun getTeamDocument(teamName: String): Document? {

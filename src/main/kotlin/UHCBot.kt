@@ -17,15 +17,7 @@ val BOT by lazy {
 }
 
 fun main() {
-    ImageUtil.playerStatsImage(
-        "senseiwells",
-        mapOf(
-            "damage dealt" to 10,
-            "damage taken" to 0,
-            "kills" to "99",
-            "deaths" to "none"
-        )
-    )
+    BOT
 }
 
 class UHCBot(token: String, mongo: String, guild: Long) {

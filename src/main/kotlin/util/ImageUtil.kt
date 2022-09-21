@@ -1,15 +1,13 @@
 package util
 
-import okhttp3.Request
+import net.dv8tion.jda.api.utils.FileUpload
 import java.awt.Color
 import java.awt.Font
 import java.awt.image.BufferedImage
-import java.io.BufferedReader
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.InputStreamReader
 import java.net.URI
-import java.net.URL
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -25,7 +23,7 @@ object ImageUtil {
         MINECRAFT_FONT = Font.createFont(Font.TRUETYPE_FONT, File(url.toURI()))
     }
 
-    fun playerStatsImage(username: String, scores: Map<String, Any>) {
+    fun playerStatsImage(username: String, scores: Map<String, Any>, imageName: String): FileUpload {
         val sizeX = 384
         val sizeY = 384
         val image = BufferedImage(sizeX, sizeY, BufferedImage.TYPE_INT_ARGB)
@@ -70,6 +68,8 @@ object ImageUtil {
 
         graphics.dispose()
 
-        ImageIO.write(image, "png", File("image.png"))
+        val output = ByteArrayOutputStream()
+        ImageIO.write(image, "png", output)
+        return FileUpload.fromData(output.toByteArray(), imageName)
     }
 }

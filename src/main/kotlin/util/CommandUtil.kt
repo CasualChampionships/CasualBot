@@ -3,10 +3,7 @@ package util
 import BOT
 import CONFIG
 import LOGGER
-import commands.AddPlayerCommand
-import commands.ClearTeamCommand
-import commands.RemovePlayerCommand
-import commands.TeamInfoCommand
+import commands.*
 import dev.minn.jda.ktx.interactions.commands.choice
 import dev.minn.jda.ktx.interactions.commands.option
 import dev.minn.jda.ktx.interactions.commands.slash
@@ -24,7 +21,8 @@ object CommandUtil {
         AddPlayerCommand(),
         RemovePlayerCommand(),
         TeamInfoCommand(),
-        ClearTeamCommand()
+        ClearTeamCommand(),
+        StatCommand()
     ).associateBy { it.getName() }
 
     val MOJANK = Mojang().connect()
@@ -80,14 +78,14 @@ object CommandUtil {
     }
 
     fun GenericCommandInteractionEvent.getServer(invalid: (String) -> Unit): Role? {
-        val serverName = getOption<String>("server")!!
+        val serverName = getOption<String>("server") ?: return null
         val role = guild?.getRolesByName(serverName, true)?.first()
         role ?: invalid(serverName)
         return role
     }
 
     fun GenericCommandInteractionEvent.getPlayer(invalid: (String) -> Unit): String? {
-        val username = getOption<String>("username")!!
+        val username = getOption<String>("username") ?: return null
         val name = getCorrectName(username)
         name ?: invalid(username)
         return name

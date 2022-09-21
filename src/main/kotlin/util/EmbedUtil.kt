@@ -2,8 +2,12 @@ package util
 
 import dev.minn.jda.ktx.messages.Embed
 import net.dv8tion.jda.api.entities.MessageEmbed
+import java.time.Instant
+import java.time.temporal.TemporalAccessor
 
 object EmbedUtil {
+    private const val UHC_LOGO = "https://cdn.discordapp.com/attachments/775083888602513439/804920103850344478/UHC_icon.png"
+
     fun getPlayerHead(username: String): String {
         return "https://visage.surgeplay.com/bust/${CommandUtil.MOJANK.getUUIDOfUsername(username)}"
     }
@@ -94,6 +98,27 @@ object EmbedUtil {
             color = colour
             description = "**Current Team**\n${members?.joinToString("\n")}"
             thumbnail = logo
+        }
+    }
+
+    fun playerStatsEmbed(username: String, imageName: String): MessageEmbed {
+        return Embed {
+            title = "$username's Stats"
+            color = 0x7ED6DF
+            image = "attachment://$imageName"
+            timestamp = Instant.now()
+            footer {
+                name = "UHC Scoreboard"
+                iconUrl = UHC_LOGO
+            }
+        }
+    }
+
+    fun noStatsEmbed(username: String): MessageEmbed {
+        return Embed {
+            title = "No Statistics Found"
+            description = "Player $username does not have any recorded statistics"
+            color = 0xFF
         }
     }
 
