@@ -2,8 +2,10 @@ package util
 
 import dev.minn.jda.ktx.messages.Embed
 import net.dv8tion.jda.api.entities.MessageEmbed
+import util.Util.capitaliseAll
 import java.time.Instant
 import java.time.temporal.TemporalAccessor
+import java.util.*
 
 object EmbedUtil {
     private const val UHC_LOGO = "https://cdn.discordapp.com/attachments/775083888602513439/804920103850344478/UHC_icon.png"
@@ -114,16 +116,26 @@ object EmbedUtil {
         }
     }
 
+    fun scoreboardEmbed(stat: String, imageName: String): MessageEmbed {
+        val capitalised = stat.capitaliseAll()
+        return Embed {
+            title = "$capitalised Scoreboard"
+            color = 0x7ED6DF
+            image = "attachment://$imageName"
+            timestamp = Instant.now()
+            footer {
+                name = "UHC Scoreboard"
+                iconUrl = UHC_LOGO
+            }
+        }
+    }
+
     fun noStatsEmbed(username: String): MessageEmbed {
         return Embed {
             title = "No Statistics Found"
             description = "Player $username does not have any recorded statistics"
             color = 0xFF
         }
-    }
-
-    fun winEmbed(winList: List<String>) {
-
     }
 
     fun somethingWentWrongEmbed(message: String): MessageEmbed {

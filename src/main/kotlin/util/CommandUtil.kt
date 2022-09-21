@@ -2,7 +2,6 @@ package util
 
 import BOT
 import CONFIG
-import LOGGER
 import commands.*
 import dev.minn.jda.ktx.interactions.commands.choice
 import dev.minn.jda.ktx.interactions.commands.option
@@ -22,7 +21,8 @@ object CommandUtil {
         RemovePlayerCommand(),
         TeamInfoCommand(),
         ClearTeamCommand(),
-        StatCommand()
+        StatCommand(),
+        ScoreboardCommand()
     ).associateBy { it.getName() }
 
     val MOJANK = Mojang().connect()

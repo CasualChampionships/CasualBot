@@ -4,6 +4,7 @@ import LOGGER
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientURI
 import com.mongodb.client.model.Filters
+import com.mongodb.client.model.Sorts
 import com.mongodb.client.model.Updates
 import dev.minn.jda.ktx.messages.Embed
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -69,6 +70,17 @@ class DataBase(url: String) {
         val imageName = "${username}_stats.png"
         val image = ImageUtil.playerStatsImage(name, result, imageName)
         return EmbedUtil.playerStatsEmbed(name, imageName) to image
+    }
+
+    fun getScoreboard(stat: String, show: Boolean): Pair<MessageEmbed, FileUpload?> {
+        val board = totalStats.find()
+            .sort(Sorts.descending(stat))
+            .filter(Filters.gt(stat, 0))
+            .limit(if (show) 0 else 10)
+            .toList()
+        val imageName = "scoreboard.png"
+        val image = ImageUtil.scoreboardImage(stat, board, imageName)
+        return EmbedUtil.scoreboardEmbed(stat, imageName) to image
     }
 
     private fun getTeamDocument(teamName: String): Document? {

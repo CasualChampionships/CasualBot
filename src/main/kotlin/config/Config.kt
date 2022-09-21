@@ -11,8 +11,7 @@ class Config private constructor(
     val mongoUrl: String,
     val guildId: Long,
     val embeds: Map<String, Embed>,
-    val nonTeams: Set<String>,
-    val admins: Set<String>
+    val nonTeams: Set<String>
 ) {
     companion object {
         private val GSON = Gson()
@@ -32,11 +31,7 @@ class Config private constructor(
             for (key in json["nonTeams"].asJsonArray) {
                 teams.add(key.asString)
             }
-            val admins = HashSet<String>()
-            for (id in json["admins"].asJsonArray) {
-                admins.add(id.asString)
-            }
-            return Config(token, mongo, guildId, embeds, teams, admins)
+            return Config(token, mongo, guildId, embeds, teams)
         }
     }
 }
