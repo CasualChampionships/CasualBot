@@ -9,7 +9,6 @@ import util.CommandUtil.addPlayerArgument
 import util.CommandUtil.addServerArgument
 import util.CommandUtil.getPlayer
 import util.CommandUtil.getServer
-import util.CommandUtil.isServerRole
 
 class AddPlayerCommand: AbstractCommand() {
     override fun getName() = "addplayer"
@@ -23,15 +22,12 @@ class AddPlayerCommand: AbstractCommand() {
     }
 
     override fun onCommand(event: GenericCommandInteractionEvent) {
-        val server = event.getServer {
+        val (name, role) = event.getServer {
             event.reply("$it could not be found?!").queue()
-        } ?: return
-        if (!server.isServerRole()) {
-            event.reply("${server.name} is not a valid server!").queue()
             return
         }
 
-        if (!CommandUtil.canMemberModifyTeam(event, server)) {
+        if (!CommandUtil.canMemberModifyTeam(event, role)) {
             return
         }
 
@@ -39,6 +35,6 @@ class AddPlayerCommand: AbstractCommand() {
             event.reply("$it is not a valid username").queue()
         } ?: return
 
-        event.replyEmbeds(BOT.db.addPlayer(server, username)).queue()
+        event.replyEmbeds(BOT.db.addPlayer(name, role.colorRaw, username)).queue()
     }
 }

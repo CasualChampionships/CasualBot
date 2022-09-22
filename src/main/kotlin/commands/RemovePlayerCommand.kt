@@ -23,15 +23,11 @@ class RemovePlayerCommand: AbstractCommand() {
     }
 
     override fun onCommand(event: GenericCommandInteractionEvent) {
-        val server = event.getServer {
+        val (name, role) = event.getServer {
             event.reply("$it could not be found?!").queue()
-        } ?: return
-        if (!server.isServerRole()) {
-            event.reply("${server.name} is not a valid server!").queue()
             return
         }
-
-        if (!CommandUtil.canMemberModifyTeam(event, server)) {
+        if (!CommandUtil.canMemberModifyTeam(event, role)) {
             return
         }
 
@@ -39,6 +35,6 @@ class RemovePlayerCommand: AbstractCommand() {
             event.reply("$it is not a valid username").queue()
         } ?: return
 
-        event.replyEmbeds(BOT.db.removePlayer(server, username)).queue()
+        event.replyEmbeds(BOT.db.removePlayer(name, role.colorRaw, username)).queue()
     }
 }

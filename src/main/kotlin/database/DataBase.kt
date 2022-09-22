@@ -3,6 +3,7 @@ package database
 import LOGGER
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientURI
+import com.mongodb.client.MongoIterable
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Sorts
 import com.mongodb.client.model.Updates
@@ -21,35 +22,35 @@ class DataBase(url: String) {
     val teams = database.getCollection("teams")
     val totalStats = database.getCollection("total_player_stats")
 
-    fun addPlayer(server: Role, username: String): MessageEmbed {
+    fun addPlayer(serverName: String, serverColour: Int, username: String): MessageEmbed {
         getPlayerTeam(username)?.let {
             return EmbedUtil.playerTakenEmbed(
-                username, it, getTeamMembers(it), getTeamLogo(it), server.colorRaw
+                username, it, getTeamMembers(it), getTeamLogo(it), serverColour
             )
         }
-        val team = getTeamMembers(server.name) ?: return EmbedUtil.somethingWentWrongEmbed("Team not found")
+        val team = getTeamMembers(serverName) ?: return EmbedUtil.somethingWentWrongEmbed("Team not found")
         if (team.size >= 5) {
-            return EmbedUtil.fullTeamEmbed(server.name, team, getTeamLogo(server.name), server.colorRaw)
+            return EmbedUtil.fullTeamEmbed(serverName, team, getTeamLogo(serverName), serverColour)
         }
-        teams.updateOne(Filters.eq("name", server.name), Updates.push("members", username))
-        return EmbedUtil.addPlayerSuccessEmbed(username, server.name, team, server.colorRaw)
+        teams.updateOne(Filters.eq("name", serverName), Updates.push("members", username))
+        return EmbedUtil.addPlayerSuccessEmbed(username, serverName, team, serverColour)
     }
 
-    fun removePlayer(server: Role, username: String): MessageEmbed {
-        val team = getTeamMembers(server.name) ?: return EmbedUtil.somethingWentWrongEmbed("Team not found")
+    fun removePlayer(server: String, colour: Int, username: String): MessageEmbed {
+        val team = getTeamMembers(server) ?: return EmbedUtil.somethingWentWrongEmbed("Team not found")
         if (username !in team) {
-            return EmbedUtil.playerNotInTeamEmbed(username, server.name, team, server.colorRaw)
+            return EmbedUtil.playerNotInTeamEmbed(username, server, team, colour)
         }
-        teams.updateOne(Filters.eq("name", server.name), Updates.pull("members", username))
-        return EmbedUtil.removePlayerSuccessEmbed(username, server.name, team.filter { it != username }, getTeamLogo(server.name), server.colorRaw)
+        teams.updateOne(Filters.eq("name", server), Updates.pull("members", username))
+        return EmbedUtil.removePlayerSuccessEmbed(username, server, team.filter { it != username }, getTeamLogo(server), colour)
     }
 
-    fun getTeamInfo(server: Role): MessageEmbed {
-        return EmbedUtil.getTeamInfoEmbed(server.name, getTeamMembers(server.name), getTeamLogo(server.name), server.colorRaw)
+    fun getTeamInfo(server: String, colour: Int): MessageEmbed {
+        return EmbedUtil.getTeamInfoEmbed(server, getTeamMembers(server), getTeamLogo(server), colour)
     }
 
-    fun clearTeam(server: Role) {
-        teams.updateOne(Filters.eq("name", server.name), Updates.set("members", listOf<Any>()))
+    fun clearTeam(server: String) {
+        teams.updateOne(Filters.eq("name", server), Updates.set("members", listOf<Any>()))
     }
 
     fun getTeamMembers(teamName: String): List<String>? {
@@ -59,7 +60,8 @@ class DataBase(url: String) {
 
     fun getTeamLogo(teamName: String): String? {
         val team = getTeamDocument(teamName) ?: return null
-        return team.getString("logo")
+        val logo = team.getString("logo")
+        return if (logo.isEmpty()) null else logo
     }
 
     fun getPlayerStats(username: String): Pair<MessageEmbed, FileUpload?> {
@@ -81,6 +83,13 @@ class DataBase(url: String) {
         val imageName = "scoreboard.png"
         val image = ImageUtil.scoreboardImage(stat, board, imageName)
         return EmbedUtil.scoreboardEmbed(stat, imageName) to image
+    }
+
+    fun getTeams(): Map<String, String> {
+        return teams.find().map {
+            val teamName = it.getString("name")
+            teamName to (it.getString("role") ?: teamName)
+        }.toMap()
     }
 
     private fun getTeamDocument(teamName: String): Document? {

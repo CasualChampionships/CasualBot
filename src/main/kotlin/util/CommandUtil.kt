@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 import org.shanerx.mojang.Mojang
 
 object CommandUtil {
@@ -22,12 +23,17 @@ object CommandUtil {
         TeamInfoCommand(),
         ClearTeamCommand(),
         StatCommand(),
-        ScoreboardCommand()
+        ScoreboardCommand(),
+        TeamCommand()
     ).associateBy { it.getName() }
 
     val MOJANK = Mojang().connect()
 
     fun loadCommands(jda: JDA) {
+        for (command in jda.guilds.first().retrieveCommands().complete()) {
+            command.delete().queue()
+        }
+
         jda.updateCommands {
             for (command in COMMANDS.values) {
                 slash(command.getName(), command.getDescription()) {
@@ -65,10 +71,16 @@ object CommandUtil {
 
     fun SlashCommandData.addServerArgument() {
         option<String>("server", "The specified server", true) {
-            for (role in BOT.guild.roles) {
-                if (role.isServerRole()) {
-                    choice(role.name, role.name)
-                }
+            for (role in BOT.db.getTeams().values) {
+                choice(role, role)
+            }
+        }
+    }
+
+    fun SubcommandData.addServerArgument() {
+        option<String>("server", "The specified server", true) {
+            for (role in BOT.db.getTeams().keys) {
+                choice(role, role)
             }
         }
     }
@@ -77,11 +89,15 @@ object CommandUtil {
         option<String>("username", "The player's Minecraft username", true)
     }
 
-    fun GenericCommandInteractionEvent.getServer(invalid: (String) -> Unit): Role? {
-        val serverName = getOption<String>("server") ?: return null
-        val role = guild?.getRolesByName(serverName, true)?.first()
-        role ?: invalid(serverName)
-        return role
+    inline fun GenericCommandInteractionEvent.getServer(invalid: (String?) -> Nothing): Pair<String, Role> {
+        val option = getOption("server") ?: invalid(null)
+        val name = option.asString
+        val roleName = name.replace(Regex("\\d+$"), "")
+        val role = guild?.getRolesByName(roleName, true)?.first()
+        if (role == null || !role.isServerRole()) {
+            invalid(name)
+        }
+        return name to role
     }
 
     fun GenericCommandInteractionEvent.getPlayer(invalid: (String) -> Unit): String? {

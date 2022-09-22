@@ -20,19 +20,15 @@ class ClearTeamCommand: AbstractCommand() {
     }
 
     override fun onCommand(event: GenericCommandInteractionEvent) {
-        val server = event.getServer {
+        val (name, role) = event.getServer {
             event.reply("$it could not be found?!").queue()
-        } ?: return
-        if (!server.isServerRole()) {
-            event.reply("${server.name} is not a valid server!").queue()
+            return
+        }
+        if (!CommandUtil.canMemberModifyTeam(event, role)) {
             return
         }
 
-        if (!CommandUtil.canMemberModifyTeam(event, server)) {
-            return
-        }
-
-        BOT.db.clearTeam(server)
-        event.reply("Successfully cleared ${server.name}").queue()
+        BOT.db.clearTeam(name)
+        event.reply("Successfully cleared $name").queue()
     }
 }

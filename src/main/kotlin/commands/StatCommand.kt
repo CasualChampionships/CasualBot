@@ -4,12 +4,8 @@ import BOT
 import dev.minn.jda.ktx.interactions.commands.restrict
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
-import net.dv8tion.jda.api.utils.FileUpload
 import util.CommandUtil.addPlayerArgument
 import util.CommandUtil.getPlayer
-import util.ImageUtil
-import java.io.File
-import javax.imageio.ImageIO
 
 class StatCommand: AbstractCommand() {
     override fun getName() = "stat"

@@ -19,14 +19,11 @@ class TeamInfoCommand: AbstractCommand() {
     }
 
     override fun onCommand(event: GenericCommandInteractionEvent) {
-        val team = event.getServer {
+        val (name, role) = event.getServer {
             event.reply("$it could not be found?!").queue()
-        } ?: return
-        if (!team.isServerRole()) {
-            event.reply("${team.name} is not a valid server!").queue()
             return
         }
 
-        event.replyEmbeds(BOT.db.getTeamInfo(team)).queue()
+        event.replyEmbeds(BOT.db.getTeamInfo(name, role.colorRaw)).queue()
     }
 }
