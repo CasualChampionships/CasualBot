@@ -7,7 +7,6 @@ import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -21,8 +20,8 @@ object ImageUtil {
     private val STATS = listOf("Damage Dealt", "Damage Taken", "Kills", "Deaths")
 
     init {
-        val url = ImageUtil::class.java.classLoader.getResource("assets/minecraft.ttf")!!
-        MINECRAFT_FONT = Font.createFont(Font.TRUETYPE_FONT, File(url.toURI()))
+        val stream = ImageUtil::class.java.classLoader.getResourceAsStream("assets/minecraft.ttf")
+        MINECRAFT_FONT = Font.createFont(Font.TRUETYPE_FONT, stream)
     }
 
     fun playerStatsImage(username: String, scores: Map<String, Any>, imageName: String): FileUpload {
