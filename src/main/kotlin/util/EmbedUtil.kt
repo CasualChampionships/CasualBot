@@ -143,8 +143,15 @@ object EmbedUtil {
     fun somethingWentWrongEmbed(message: String): MessageEmbed {
         return Embed {
             title = "Something went wrong?"
-            color = 0xFF
+            color = 0xFF9494
             description = message
+        }
+    }
+
+    fun noPermission(): MessageEmbed {
+        return Embed {
+            title = "You do not have permission to do this action"
+            color = 0xFF9494
         }
     }
 

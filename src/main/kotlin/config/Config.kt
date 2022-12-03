@@ -67,15 +67,15 @@ class Embed private constructor(
                 val (title, description) = iter.next()
                 field {
                     name = title
-                    value = description.joinToString(" ") + "\n\n"
+                    value = description.joinToString(" ").trimEnd() + if (iter.hasNext()) "\n\n_ _" else ""
                     inline = false
                 }
-                if (iter.hasNext()) {
-                    field {
-                        name = "_ _"
-                        inline = false
-                    }
-                }
+//                if (iter.hasNext()) {
+//                    field {
+//                        name = "_ _"
+//                        inline = false
+//                    }
+//                }
             }
             color = colour
         }.build()

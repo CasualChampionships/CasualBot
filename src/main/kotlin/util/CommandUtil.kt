@@ -18,15 +18,10 @@ import org.shanerx.mojang.Mojang
 
 object CommandUtil {
     private val COMMANDS = setOf(
-        AddPlayerCommand(),
-        RemovePlayerCommand(),
-        TeamInfoCommand(),
-        ClearTeamCommand(),
         StatCommand(),
         ScoreboardCommand(),
         TeamCommand(),
         EmbedCommand(),
-        ClearAllTeamsCommand(),
         ReloadCommand(),
         WinsCommand()
     ).associateBy { it.getName() }
@@ -58,7 +53,7 @@ object CommandUtil {
                 return true
             }
         }
-        event.reply("You cannot use the command ${event.commandString}")
+        // event.reply("You cannot use the command ${event.commandString}")
         return false
     }
 
@@ -104,11 +99,15 @@ object CommandUtil {
         option<String>("username", "The player's Minecraft username", true)
     }
 
+    fun SubcommandData.addPlayerArgument() {
+        option<String>("username", "The player's Minecraft username", true)
+    }
+
     inline fun GenericCommandInteractionEvent.getServer(invalid: (String?) -> Nothing): Pair<String, Role> {
         val option = getOption("server") ?: invalid(null)
         val name = option.asString
         val roleName = name.replace(Regex("\\d+$"), "")
-        val role = guild?.getRolesByName(roleName, true)?.first()
+        val role = guild?.getRolesByName(roleName, true)?.firstOrNull()
         if (role == null || !role.isServerRole()) {
             invalid(name)
         }

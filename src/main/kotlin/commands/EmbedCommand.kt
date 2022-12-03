@@ -25,6 +25,7 @@ class EmbedCommand: AbstractCommand() {
 
     override fun onCommand(event: GenericCommandInteractionEvent) {
         if (!CommandUtil.isMemberAdmin(event)) {
+            event.replyEmbeds(EmbedUtil.noPermission()).queue()
             return
         }
 

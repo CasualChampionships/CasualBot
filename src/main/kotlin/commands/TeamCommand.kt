@@ -13,10 +13,15 @@ import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionE
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import org.bson.Document
 import util.CommandUtil
+import util.CommandUtil.addPlayerArgument
 import util.CommandUtil.addServerArgument
+import util.CommandUtil.getPlayer
 import util.CommandUtil.getServer
+import util.EmbedUtil
 
 class TeamCommand: AbstractCommand() {
+    private val adminOnly = setOf("create", "delete", "setlogo", "setcolour")
+
     override fun getName() = "team"
 
     override fun getDescription() = "Used for creating and deleting teams"
@@ -54,9 +59,28 @@ class TeamCommand: AbstractCommand() {
                 choice("Black", "BLACK")
             }
         }
+        command.subcommand("clear", "Clears all the players from a team") {
+            addServerArgument()
+        }
+        command.subcommand("clearall", "Clears all the players from all teams")
+        command.subcommand("add", "adds a player to a specified team") {
+            addServerArgument()
+            addPlayerArgument()
+        }
+        command.subcommand("remove", "Removes a player from a specified team") {
+            addServerArgument()
+            addPlayerArgument()
+        }
+        command.subcommand("info", "Get a team's current information") {
+            addServerArgument()
+        }
     }
 
     override fun onCommand(event: GenericCommandInteractionEvent) {
+        if (event.subcommandName in adminOnly && !CommandUtil.isMemberAdmin(event)) {
+            event.replyEmbeds(EmbedUtil.noPermission()).queue()
+            return
+        }
         when (event.subcommandName) {
             "create" -> {
                 val name = event.getOption<String>("name")!!
@@ -79,20 +103,20 @@ class TeamCommand: AbstractCommand() {
             }
             "delete" -> {
                 val (name, _) = event.getServer {
-                    event.reply("Invalid server: $it").queue()
-                    return
+                    if (BOT.db.teams.deleteOne(Filters.eq("name", it)).deletedCount == 0L) {
+                        return event.reply("Failed to delete any team").queue()
+                    }
+                    return event.reply("Invalid role: $it, but successfully deleted team from database").queue()
                 }
                 if (BOT.db.teams.deleteOne(Filters.eq("name", name)).deletedCount == 0L) {
-                    event.reply("Failed to delete any team").queue()
-                    return
+                    return event.reply("Failed to delete any team").queue()
                 }
                 event.reply("Successfully delete team: $name").queue()
                 CommandUtil.loadCommands(BOT.jda)
             }
             "setlogo" -> {
                 val (name, _) = event.getServer {
-                    event.reply("Invalid server: $it").queue()
-                    return
+                    return event.reply("Invalid server: $it").queue()
                 }
                 val url = event.getOption<String>("url") ?: return
                 BOT.db.teams.findOneAndUpdate(Filters.eq("name", name), Updates.set("logo", url))
@@ -106,6 +130,65 @@ class TeamCommand: AbstractCommand() {
                 val colour = event.getOption<String>("colour") ?: return
                 BOT.db.teams.findOneAndUpdate(Filters.eq("name", name), Updates.set("colour", colour))
                 event.reply("Successfully updated colour").queue()
+            }
+            "clear" -> {
+                val (name, role) = event.getServer {
+                    return event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it could not be found?!")).queue()
+                }
+                if (!CommandUtil.canMemberModifyTeam(event, role)) {
+                    return event.replyEmbeds(EmbedUtil.noPermission()).queue()
+                }
+                BOT.db.clearTeam(name)
+                event.reply("Successfully cleared $name").queue()
+            }
+            "clearall" -> {
+                if (!CommandUtil.isMemberAdmin(event)) {
+                    event.replyEmbeds(EmbedUtil.noPermission()).queue()
+                    return
+                }
+                BOT.db.clearAllTeams()
+                event.reply("Successfully cleared all teams").queue()
+            }
+            "add" -> {
+                val (name, role) = event.getServer {
+                    event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it could not be found?!")).queue()
+                    return
+                }
+
+                if (!CommandUtil.canMemberModifyTeam(event, role)) {
+                    event.replyEmbeds(EmbedUtil.noPermission()).queue()
+                    return
+                }
+
+                val username = event.getPlayer {
+                    event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it is not a valid username")).queue()
+                } ?: return
+
+                event.replyEmbeds(BOT.db.addPlayer(name, role.colorRaw, username)).queue()
+            }
+            "remove" -> {
+                val (name, role) = event.getServer {
+                    event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it could not be found?!")).queue()
+                    return
+                }
+                if (!CommandUtil.canMemberModifyTeam(event, role)) {
+                    event.replyEmbeds(EmbedUtil.noPermission()).queue()
+                    return
+                }
+
+                val username = event.getPlayer {
+                    event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it is not a valid username")).queue()
+                } ?: return
+
+                event.replyEmbeds(BOT.db.removePlayer(name, role.colorRaw, username)).queue()
+            }
+            "info" -> {
+                val (name, role) = event.getServer {
+                    event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it could not be found?!")).queue()
+                    return
+                }
+
+                event.replyEmbeds(BOT.db.getTeamInfo(name, role.colorRaw)).queue()
             }
         }
     }

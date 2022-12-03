@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionE
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import util.CommandUtil.addPlayerArgument
 import util.CommandUtil.getPlayer
+import util.EmbedUtil
 
 class StatCommand: AbstractCommand() {
     override fun getName() = "stat"
@@ -19,7 +20,7 @@ class StatCommand: AbstractCommand() {
 
     override fun onCommand(event: GenericCommandInteractionEvent) {
         val username = event.getPlayer {
-            event.reply("$it is not a valid username").queue()
+            event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it is not a valid username")).queue()
         } ?: return
         val (embed, file) = BOT.db.getPlayerStats(username)
         val action = event.replyEmbeds(embed)

@@ -5,6 +5,7 @@ import dev.minn.jda.ktx.interactions.commands.restrict
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import util.CommandUtil
+import util.EmbedUtil
 
 class WinsCommand: AbstractCommand() {
     override fun getName() = "wins"
@@ -17,6 +18,7 @@ class WinsCommand: AbstractCommand() {
 
     override fun onCommand(event: GenericCommandInteractionEvent) {
         if (!CommandUtil.isMemberAdmin(event)) {
+            event.replyEmbeds(EmbedUtil.noPermission()).queue()
             return
         }
 
