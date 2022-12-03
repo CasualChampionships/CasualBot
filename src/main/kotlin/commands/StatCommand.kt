@@ -22,8 +22,9 @@ class StatCommand: AbstractCommand() {
         val username = event.getPlayer {
             event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it is not a valid username")).queue()
         } ?: return
+        event.reply("Loading stats...").setEphemeral(true).queue()
         val (embed, file) = BOT.db.getPlayerStats(username)
-        val action = event.replyEmbeds(embed)
+        val action = event.messageChannel.sendMessageEmbeds(embed)
         file?.let { action.addFiles(it) }
         action.queue()
     }
