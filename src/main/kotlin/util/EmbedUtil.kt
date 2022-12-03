@@ -1,16 +1,17 @@
 package util
 
+import BOT
+import CONFIG
 import dev.minn.jda.ktx.messages.Embed
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import util.Util.capitaliseAll
 import java.time.Instant
-import java.time.temporal.TemporalAccessor
-import java.util.*
 
 object EmbedUtil {
     private const val UHC_LOGO = "https://cdn.discordapp.com/attachments/775083888602513439/804920103850344478/UHC_icon.png"
 
-    fun getPlayerHead(username: String): String {
+    private fun getPlayerHead(username: String): String {
         return "https://visage.surgeplay.com/bust/${CommandUtil.MOJANK.getUUIDOfUsername(username)}"
     }
 
@@ -28,7 +29,7 @@ object EmbedUtil {
         return Embed {
             title = "$username is already on $server's team"
             color = colour
-            description = "**Current Team**\n${members?.joinToString("\n")}"
+            description = currentMembers(members)
             thumbnail = logo
         }
     }
@@ -42,7 +43,7 @@ object EmbedUtil {
         return Embed {
             title = "$username is not on $server's team"
             color = colour
-            description = "**Current Team**\n${members.joinToString("\n")}"
+            description = currentMembers(members)
         }
     }
 
@@ -52,10 +53,12 @@ object EmbedUtil {
         members: List<String>,
         colour: Int
     ): MessageEmbed {
+        val updated = members.toMutableList()
+        updated.add(username)
         return Embed {
             title = "Added $username to $server's team"
             color = colour
-            description = "**Current Team**\n$username\n${members.joinToString("\n")}"
+            description = currentMembers(updated)
             thumbnail = getPlayerHead(username)
         }
     }
@@ -70,7 +73,7 @@ object EmbedUtil {
         return Embed {
             title = "Removed $username from $server's team"
             color = colour
-            description = "**Current Team**\n${members.joinToString("\n")}"
+            description = currentMembers(members)
             thumbnail = logo
         }
     }
@@ -84,7 +87,7 @@ object EmbedUtil {
         return Embed {
             title = "$server's team is full"
             color = colour
-            description = "**Current Team**\n${members.joinToString("\n")}"
+            description = currentMembers(members)
             thumbnail = logo
         }
     }
@@ -98,7 +101,7 @@ object EmbedUtil {
         return Embed {
             title = "Info for $server"
             color = colour
-            description = "**Current Team**\n${members?.joinToString("\n")}"
+            description = currentMembers(members)
             thumbnail = logo
         }
     }
@@ -144,5 +147,27 @@ object EmbedUtil {
             color = 0xFF
             description = message
         }
+    }
+
+    fun configEmbed(key: String): MessageEmbed {
+        val embed = CONFIG.embeds[key]
+        embed ?: return somethingWentWrongEmbed("Embed not found...")
+        return embed.toEmbed()
+    }
+
+    fun winsEmbed(teams: Map<String, String>): MessageEmbed {
+        return Embed {
+            title = "Wins"
+            description = teams.entries.joinToString("\n") { "${it.key}: ${it.value}" }
+            color = 0x7ED6DF
+            thumbnail = UHC_LOGO
+        }
+    }
+
+    private fun currentMembers(members: List<String>?): String {
+        if (members.isNullOrEmpty()) {
+            return "**No Members**"
+        }
+        return "**Current Team**\n${MarkdownSanitizer.sanitize(members.joinToString("\n"), MarkdownSanitizer.SanitizationStrategy.ESCAPE)}"
     }
 }

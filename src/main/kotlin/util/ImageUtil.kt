@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.utils.FileUpload
 import util.Util.capitaliseAll
 import java.awt.Color
 import java.awt.Font
+import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -29,6 +30,8 @@ object ImageUtil {
         val sizeY = 384
         val image = BufferedImage(sizeX, sizeY, BufferedImage.TYPE_INT_ARGB)
         val graphics = image.createGraphics()
+
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         // Background
         graphics.color = Color(0x2C2F33)
@@ -100,6 +103,8 @@ object ImageUtil {
 
         val image = BufferedImage(totalWidth, totalHeight, BufferedImage.TYPE_INT_ARGB)
         val graphics = image.createGraphics()
+
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         // Background
         graphics.color = Color(0x2C2F33)

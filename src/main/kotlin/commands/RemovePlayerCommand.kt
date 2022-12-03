@@ -9,7 +9,6 @@ import util.CommandUtil.addPlayerArgument
 import util.CommandUtil.addServerArgument
 import util.CommandUtil.getPlayer
 import util.CommandUtil.getServer
-import util.CommandUtil.isServerRole
 
 class RemovePlayerCommand: AbstractCommand() {
     override fun getName() = "removeplayer"

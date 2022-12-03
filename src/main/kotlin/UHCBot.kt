@@ -3,7 +3,6 @@ import database.DataBase
 import event.EventHandler
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.internal.utils.JDALogger
-import util.ImageUtil
 import java.nio.file.Path
 
 val LOGGER = JDALogger.getLog("UHC Bot")
@@ -26,5 +25,4 @@ class UHCBot(token: String, mongo: String, guild: Long) {
     }.build()
     val db = DataBase(mongo)
     val guild by lazy { jda.getGuildById(guild)!! }
-
 }

@@ -3,16 +3,30 @@ package config
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import dev.minn.jda.ktx.messages.EmbedBuilder
+import net.dv8tion.jda.api.entities.MessageEmbed
 import java.nio.file.Files
 import java.nio.file.Path
 
 class Config private constructor(
+    val path: Path,
     val token: String,
     val mongoUrl: String,
     val guildId: Long,
-    val embeds: Map<String, Embed>,
+    val embeds: MutableMap<String, Embed>,
     val nonTeams: Set<String>
 ) {
+    fun updateEmbeds() {
+        embeds.clear()
+
+        val contents = Files.readString(path)
+        val json = GSON.fromJson(contents, JsonObject::class.java)
+        val embedsJson = json["embeds"].asJsonObject
+        for (key in embedsJson.keySet()) {
+            embeds[key] = Embed.fromJson(embedsJson[key])
+        }
+    }
+
     companion object {
         private val GSON = Gson()
 
@@ -23,7 +37,7 @@ class Config private constructor(
             val mongo = json["mongoUrl"].asString
             val guildId = json["guildId"].asLong
             val embedsJson = json["embeds"].asJsonObject
-            val embeds = HashMap<String, Embed>()
+            val embeds = LinkedHashMap<String, Embed>()
             for (key in embedsJson.keySet()) {
                 embeds[key] = Embed.fromJson(embedsJson[key])
             }
@@ -31,27 +45,45 @@ class Config private constructor(
             for (key in json["nonTeams"].asJsonArray) {
                 teams.add(key.asString)
             }
-            return Config(token, mongo, guildId, embeds, teams)
+            return Config(path, token, mongo, guildId, embeds, teams)
         }
     }
 }
 
 class Embed private constructor(
-    val embeds: Map<String, List<String>>,
+    val name: String,
+    val fields: Map<String, List<String>>,
     val colour: Int
 ) {
+    fun toEmbed(): MessageEmbed {
+        return EmbedBuilder {
+            title = name
+            for ((title, description) in fields) {
+                field {
+                    name = title
+                    value = description.joinToString(" ") + "\n\n"
+                    inline = false
+                }
+            }
+            color = colour
+        }.build()
+    }
+
     companion object {
         fun fromJson(element: JsonElement): Embed {
             val jObject = element.asJsonObject
-            val embeds = HashMap<String, List<String>>()
+            val embeds = LinkedHashMap<String, List<String>>()
             for (key in jObject.keySet()) {
                 val contents = ArrayList<String>()
-                for (string in jObject[key].asJsonArray) {
-                    contents.add(string.asString)
+                val keyElement = jObject[key]
+                if (keyElement.isJsonArray) {
+                    for (string in jObject[key].asJsonArray) {
+                        contents.add(string.asString)
+                    }
+                    embeds[key] = contents
                 }
-                embeds[key] = contents
             }
-            return Embed(embeds, jObject["colour"].asInt)
+            return Embed(jObject["title"].asString, embeds, jObject["colour"].asInt)
         }
     }
 }

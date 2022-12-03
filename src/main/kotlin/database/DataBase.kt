@@ -1,17 +1,17 @@
 package database
 
+import BOT
 import LOGGER
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientURI
-import com.mongodb.client.MongoIterable
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Sorts
 import com.mongodb.client.model.Updates
-import dev.minn.jda.ktx.messages.Embed
 import net.dv8tion.jda.api.entities.MessageEmbed
-import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.utils.FileUpload
+import org.bson.BsonDocument
 import org.bson.Document
+import org.bson.conversions.Bson
 import util.CommandUtil
 import util.EmbedUtil
 import util.ImageUtil
@@ -53,6 +53,10 @@ class DataBase(url: String) {
         teams.updateOne(Filters.eq("name", server), Updates.set("members", listOf<Any>()))
     }
 
+    fun clearAllTeams() {
+        teams.updateMany(BsonDocument(), Updates.set("members", listOf<Any>()))
+    }
+
     fun getTeamMembers(teamName: String): List<String>? {
         val team = getTeamDocument(teamName) ?: return null
         return team.getList("members", String::class.java)
@@ -61,7 +65,15 @@ class DataBase(url: String) {
     fun getTeamLogo(teamName: String): String? {
         val team = getTeamDocument(teamName) ?: return null
         val logo = team.getString("logo")
-        return if (logo.isEmpty()) null else logo
+        return logo.ifEmpty { null }
+    }
+
+    fun getTeamWins(): Map<String, String> {
+        return teams.find().sort(Sorts.descending("wins")).map { it["name"].toString() to it["wins"].toString() }.toMap()
+    }
+
+    fun getTeamStats(): MessageEmbed {
+        return EmbedUtil.winsEmbed(getTeamWins())
     }
 
     fun getPlayerStats(username: String): Pair<MessageEmbed, FileUpload?> {

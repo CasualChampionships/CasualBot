@@ -24,7 +24,11 @@ object CommandUtil {
         ClearTeamCommand(),
         StatCommand(),
         ScoreboardCommand(),
-        TeamCommand()
+        TeamCommand(),
+        EmbedCommand(),
+        ClearAllTeamsCommand(),
+        ReloadCommand(),
+        WinsCommand()
     ).associateBy { it.getName() }
 
     val MOJANK = Mojang().connect()
@@ -45,6 +49,17 @@ object CommandUtil {
 
     fun onCommand(event: GenericCommandInteractionEvent) {
         COMMANDS[event.name]?.onCommand(event)
+    }
+
+    fun isMemberAdmin(event: GenericCommandInteractionEvent): Boolean {
+        val user = event.member ?: return false
+        for (role in user.roles) {
+            if (role.hasPermission(Permission.ADMINISTRATOR)) {
+                return true
+            }
+        }
+        event.reply("You cannot use the command ${event.commandString}")
+        return false
     }
 
     fun canMemberModifyTeam(event: GenericCommandInteractionEvent, server: Role): Boolean {

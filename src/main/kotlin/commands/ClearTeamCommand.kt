@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import util.CommandUtil
 import util.CommandUtil.addServerArgument
 import util.CommandUtil.getServer
-import util.CommandUtil.isServerRole
 
 class ClearTeamCommand: AbstractCommand() {
     override fun getName() = "clearteam"
