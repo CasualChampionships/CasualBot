@@ -1,6 +1,5 @@
 package util
 
-import BOT
 import CONFIG
 import dev.minn.jda.ktx.messages.Embed
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -149,10 +148,10 @@ object EmbedUtil {
         }
     }
 
-    fun configEmbed(key: String): MessageEmbed {
+    fun customEmbed(key: String): Triple<MessageEmbed, Long, Long> {
         val embed = CONFIG.embeds[key]
-        embed ?: return somethingWentWrongEmbed("Embed not found...")
-        return embed.toEmbed()
+        embed ?: return Triple(somethingWentWrongEmbed("Embed not found..."), 1, 1)
+        return Triple(embed.toEmbed(), embed.messageId, embed.channelId)
     }
 
     fun winsEmbed(teams: Map<String, String>): MessageEmbed {

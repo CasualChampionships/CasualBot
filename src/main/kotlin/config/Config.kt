@@ -13,6 +13,7 @@ class Config private constructor(
     val token: String,
     val mongoUrl: String,
     val guildId: Long,
+    val suggestionsId: Long,
     val embeds: MutableMap<String, Embed>,
     val nonTeams: Set<String>
 ) {
@@ -36,6 +37,7 @@ class Config private constructor(
             val token = json["token"].asString
             val mongo = json["mongoUrl"].asString
             val guildId = json["guildId"].asLong
+            val suggestionsId = json["suggestionsId"].asLong
             val embedsJson = json["embeds"].asJsonObject
             val embeds = LinkedHashMap<String, Embed>()
             for (key in embedsJson.keySet()) {
@@ -45,7 +47,7 @@ class Config private constructor(
             for (key in json["nonTeams"].asJsonArray) {
                 teams.add(key.asString)
             }
-            return Config(path, token, mongo, guildId, embeds, teams)
+            return Config(path, token, mongo, guildId, suggestionsId, embeds, teams)
         }
     }
 }
@@ -53,16 +55,26 @@ class Config private constructor(
 class Embed private constructor(
     val name: String,
     val fields: Map<String, List<String>>,
-    val colour: Int
+    val colour: Int,
+    val messageId: Long,
+    val channelId: Long
 ) {
     fun toEmbed(): MessageEmbed {
         return EmbedBuilder {
             title = name
-            for ((title, description) in fields) {
+            val iter = fields.iterator()
+            while (iter.hasNext()) {
+                val (title, description) = iter.next()
                 field {
                     name = title
                     value = description.joinToString(" ") + "\n\n"
                     inline = false
+                }
+                if (iter.hasNext()) {
+                    field {
+                        name = "_ _"
+                        inline = false
+                    }
                 }
             }
             color = colour
@@ -83,7 +95,9 @@ class Embed private constructor(
                     embeds[key] = contents
                 }
             }
-            return Embed(jObject["title"].asString, embeds, jObject["colour"].asInt)
+            val messageId = jObject["messageId"]?.asLong ?: -1
+            val channelId = jObject["channelId"]?.asLong ?: -1
+            return Embed(jObject["title"].asString, embeds, jObject["colour"].asInt, messageId, channelId)
         }
     }
 }
