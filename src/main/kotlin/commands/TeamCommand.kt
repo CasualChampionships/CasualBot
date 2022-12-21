@@ -91,7 +91,8 @@ class TeamCommand: AbstractCommand() {
                     put("colour", "WHITE")
                 }
                 Regex("\\d+$").find(name)?.value?.toInt()?.let {
-                    val roleName = name.replace(Regex("\\d+$"), "")
+                    val regex = if (name.matches(Regex("^\\d+$"))) "_\\d+$" else "\\d+$"
+                    val roleName = name.replace(Regex(regex), "")
                     event.guild?.getRolesByName(roleName, true) ?: event.reply("No existing team: $roleName")
                 }
                 BOT.db.teams.insertOne(doc)

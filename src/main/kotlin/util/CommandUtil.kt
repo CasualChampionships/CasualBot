@@ -106,7 +106,8 @@ object CommandUtil {
     inline fun GenericCommandInteractionEvent.getServer(invalid: (String?) -> Nothing): Pair<String, Role> {
         val option = getOption("server") ?: invalid(null)
         val name = option.asString
-        val roleName = name.replace(Regex("\\d+$"), "")
+        val regex = if (name.matches(Regex("^\\d+$"))) "_\\d+$" else "\\d+$"
+        val roleName = name.replace(Regex(regex), "")
         val role = guild?.getRolesByName(roleName, true)?.firstOrNull()
         if (role == null || !role.isServerRole()) {
             invalid(name)
