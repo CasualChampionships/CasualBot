@@ -4,7 +4,7 @@ import java.util.*
 
 object Util {
     fun String.capitaliseAll(): String {
-        return split(" ").map { it.capitalise() }.joinToString(" ")
+        return split(" ").joinToString(" ") { it.capitalise() }
     }
 
     fun String.capitalise(): String {

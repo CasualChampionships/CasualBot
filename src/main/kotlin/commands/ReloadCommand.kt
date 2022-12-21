@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionE
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import util.CommandUtil
 import util.EmbedUtil
+import util.ImageUtil
 
 class ReloadCommand: AbstractCommand() {
     override fun getName() = "reload"
@@ -22,6 +23,7 @@ class ReloadCommand: AbstractCommand() {
             return
         }
         CONFIG.updateEmbeds()
+        ImageUtil.clearCaches()
         event.reply("Successfully reloaded!").queue()
     }
 }

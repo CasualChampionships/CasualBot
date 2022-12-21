@@ -1,9 +1,11 @@
 package util
 
 import net.dv8tion.jda.api.utils.FileUpload
+import util.Util.capitalise
 import util.Util.capitaliseAll
 import java.awt.Color
 import java.awt.Font
+import java.awt.Image
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
@@ -12,72 +14,148 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.text.DecimalFormat
+import java.util.*
 import javax.imageio.ImageIO
 import kotlin.math.max
 
 object ImageUtil {
+    private val STAT_CACHE = WeakHashMap<String, FileUpload>()
+    private val TOTAL_STAT_CACHE = WeakHashMap<String, FileUpload>()
+    private val ADVANCEMENT_CACHE = WeakHashMap<String, FileUpload>()
+    private val SCOREBOARD_CACHE = WeakHashMap<String, FileUpload>()
+
+    private val ITEM_CACHE = WeakHashMap<String, Image>()
+
     private val MINECRAFT_FONT: Font
+    private val ADVANCEMENT_BANNER: BufferedImage
     private val HTTP_CLIENT = HttpClient.newHttpClient()
-    private val STATS = listOf("Damage Dealt", "Damage Taken", "Kills", "Deaths")
+    private val DECIMAL_FORMAT = DecimalFormat("0.#")
 
     init {
-        val stream = ImageUtil::class.java.classLoader.getResourceAsStream("assets/minecraft.ttf")
+        var stream = ImageUtil::class.java.classLoader.getResourceAsStream("assets/minecraft.ttf")
         MINECRAFT_FONT = Font.createFont(Font.TRUETYPE_FONT, stream)
+
+        stream = ImageUtil::class.java.classLoader.getResourceAsStream("assets/AdvancementBanner.png")
+        ADVANCEMENT_BANNER = ImageIO.read(stream)
     }
 
-    fun playerStatsImage(username: String, scores: Map<String, Any>, imageName: String): FileUpload {
-        val sizeX = 384
-        val sizeY = 384
-        val image = BufferedImage(sizeX, sizeY, BufferedImage.TYPE_INT_ARGB)
+    fun playerStatsImage(username: String, scores: Map<String, Any>, imageName: String, total: Boolean): FileUpload {
+        val cache = if (total) TOTAL_STAT_CACHE else STAT_CACHE
+        cache[username]?.let { return it }
+
+        val size = 80 * (scores.size) + 90
+        val image = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
         val graphics = image.createGraphics()
 
-        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
         // Background
         graphics.color = Color(0x2C2F33)
-        graphics.fillRect(0, 0, sizeX, sizeY)
-
-        // Font
-        graphics.font = MINECRAFT_FONT.deriveFont(26.0F)
-        val height = graphics.fontMetrics.height - 4
-        val deltaValues = height + 5
-        val deltaStats = height + 24
-
-        val xPos = 10
-        var yPos = 88
-        STATS.forEach { stat ->
-            graphics.color = Color(0xBFBFBF)
-            graphics.drawString("$stat:", xPos, yPos)
-            yPos += deltaValues
-            val score = scores[stat.lowercase()].toString()
-            graphics.color = Color(0xFF5555)
-            graphics.drawString(score, xPos, yPos)
-            yPos += deltaStats
-        }
+        graphics.fillRect(0, 0, size, size)
 
         // Player
-        val imageSize = 280
-        val uri = URI.create(EmbedUtil.getPlayerBody(username, imageSize))
+        val uri = URI.create(EmbedUtil.getPlayerBody(username, (size * 0.8).toInt()))
         val request = HttpRequest.newBuilder(uri).build()
         val response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofByteArray())
         if (response.statusCode() == 200) {
             val body = ImageIO.read(ByteArrayInputStream(response.body()))
-            graphics.drawImage(body, 200, 60, null)
+            graphics.drawImage(body, (size * 0.42).toInt(), (size * 0.15).toInt(), null)
+        }
+
+        // Font
+        graphics.font = MINECRAFT_FONT.deriveFont(26.0F)
+        val deltaValues = 30
+        val deltaStats = 50
+
+        val xPos = 10
+        var yPos = 110
+
+        for ((id, value) in scores) {
+            val name = id.split("_").joinToString(" ") { it.capitalise() }
+            graphics.color = Color(0xBFBFBF)
+            graphics.drawString("$name:", xPos, yPos)
+            yPos += deltaValues
+            graphics.color = Color(0xFF5555)
+
+            val score = if ((value as Double).isNaN()) "None" else DECIMAL_FORMAT.format(value)
+            graphics.drawString(score, xPos, yPos)
+            yPos += deltaStats
         }
 
         // Name
-        graphics.font = MINECRAFT_FONT.deriveFont(48.0F)
+        graphics.font = MINECRAFT_FONT.deriveFont(72.0F)
         graphics.color = Color(0x5555FF)
-        graphics.drawString(username, 10, 40)
+        graphics.drawString(username, 20, 60)
 
         graphics.dispose()
 
         val output = ByteArrayOutputStream()
         ImageIO.write(image, "png", output)
-        return FileUpload.fromData(output.toByteArray(), imageName)
+        return FileUpload.fromData(output.toByteArray(), imageName).also { cache[username] = it }
+    }
+
+    fun playerAdvancementsImage(username: String, advancements: Map<String, String>, imageName: String): FileUpload {
+        ADVANCEMENT_CACHE[username]?.let { return it }
+
+        val sizeX = 384
+        val sizeY = (ADVANCEMENT_BANNER.height + 10) * advancements.size + 10
+        val image = BufferedImage(sizeX, sizeY, BufferedImage.TYPE_INT_ARGB)
+        val graphics = image.createGraphics()
+
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+
+        // Background
+        graphics.color = Color(0x2C2F33)
+        graphics.fillRect(0, 0, sizeX, sizeY)
+
+        val delta = ADVANCEMENT_BANNER.height + 10
+
+        val bannerX = 10
+        var bannerY = 10
+
+        graphics.color = Color(0xBFBFBF)
+
+        for ((id, value) in advancements) {
+            graphics.font = MINECRAFT_FONT.deriveFont(32.0F)
+            val name = id.replace("uhc/", "").split("_").joinToString(" ") { it.capitalise() }
+            graphics.drawImage(ADVANCEMENT_BANNER, bannerX, bannerY, null)
+
+            val width = graphics.fontMetrics.stringWidth(name)
+            var textShift = 50
+            if (width > 240) {
+                val multiplier = 240.0F / width
+                graphics.font = MINECRAFT_FONT.deriveFont(32.0F * multiplier)
+                textShift -= (3.5 / multiplier).toInt()
+            }
+            graphics.drawString(name, bannerX + 100, bannerY + textShift)
+
+            val item = ITEM_CACHE.computeIfAbsent(value) {
+                val uri = URI.create("https://mc.nerothe.com/img/1.19.2/${value}.png")
+                val request = HttpRequest.newBuilder(uri).build()
+                val response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofByteArray())
+                if (response.statusCode() == 200) {
+                    ImageIO.read(ByteArrayInputStream(response.body()))
+                } else null
+            }
+
+            if (item != null) {
+                graphics.drawImage(item, bannerX + 26, bannerY + 14, null)
+            }
+
+            bannerY += delta
+        }
+
+        graphics.dispose()
+
+        val output = ByteArrayOutputStream()
+        ImageIO.write(image, "png", output)
+        return FileUpload.fromData(output.toByteArray(), imageName).also { ADVANCEMENT_CACHE[username] = it }
     }
 
     fun scoreboardImage(stat: String, scores: List<Map<String, Any>>, imageName: String): FileUpload {
+        SCOREBOARD_CACHE[stat]?.let { return it }
+
         val dummy = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB)
         val dummyGraphics = dummy.createGraphics()
         dummyGraphics.font = MINECRAFT_FONT.deriveFont(20.0F)
@@ -128,6 +206,13 @@ object ImageUtil {
 
         val output = ByteArrayOutputStream()
         ImageIO.write(image, "png", output)
-        return FileUpload.fromData(output.toByteArray(), imageName)
+        return FileUpload.fromData(output.toByteArray(), imageName).also { SCOREBOARD_CACHE[stat] = it }
+    }
+
+    fun clearCaches() {
+        STAT_CACHE.clear()
+        TOTAL_STAT_CACHE.clear()
+        ADVANCEMENT_CACHE.clear()
+        SCOREBOARD_CACHE.clear()
     }
 }

@@ -1,6 +1,5 @@
 package database
 
-import BOT
 import LOGGER
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientURI
@@ -11,7 +10,6 @@ import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.utils.FileUpload
 import org.bson.BsonDocument
 import org.bson.Document
-import org.bson.conversions.Bson
 import util.CommandUtil
 import util.EmbedUtil
 import util.ImageUtil
@@ -20,7 +18,8 @@ class DataBase(url: String) {
     val client = MongoClient(MongoClientURI(url))
     val database = client.getDatabase("UHC")
     val teams = database.getCollection("teams")
-    val totalStats = database.getCollection("total_player_stats")
+    val latestStats = database.getCollection("test_player_stats")
+    val totalStats = database.getCollection("test_total_player_stats")
 
     fun addPlayer(serverName: String, serverColour: Int, username: String): MessageEmbed {
         getPlayerTeam(username)?.let {
@@ -76,14 +75,38 @@ class DataBase(url: String) {
         return EmbedUtil.winsEmbed(getTeamWins())
     }
 
-    fun getPlayerStats(username: String): Pair<MessageEmbed, FileUpload?> {
+    fun getPlayerStats(username: String, lifetime: Boolean = false): Pair<List<MessageEmbed>, List<FileUpload>> {
         val name = CommandUtil.getCorrectName(username)
-        name ?: return EmbedUtil.noStatsEmbed(username) to null
-        val result = totalStats.find(Filters.eq("name", name)).first()
-        result ?: return EmbedUtil.noStatsEmbed(name) to null
-        val imageName = "${username}_stats.png"
-        val image = ImageUtil.playerStatsImage(name, result, imageName)
-        return EmbedUtil.playerStatsEmbed(name, imageName) to image
+        name ?: return listOf(EmbedUtil.noStatsEmbed(username)) to listOf()
+
+        if (lifetime) {
+            val result = totalStats.find(Filters.eq("_id", name)).first()
+            result ?: return listOf(EmbedUtil.noStatsEmbed(username)) to listOf()
+            val statsImageName = "${username}_stats.png"
+            result.remove("_id")
+            val statsImage = ImageUtil.playerStatsImage(name, result, statsImageName, true)
+            return listOf(EmbedUtil.playerStatsEmbed(name, statsImageName, true)) to listOf(statsImage)
+        }
+
+        val result = latestStats.find(Filters.eq("_id", name)).first()
+        result ?: return listOf(EmbedUtil.noStatsEmbed(username)) to listOf()
+        val statsImageName = "${username}_stats.png"
+        result.remove("_id")
+        val advancements = (result.remove("advancements") as ArrayList<*>).stream()
+            .map { o -> (o as Document).getString("id") to o.getString("item") }
+            .filter { (id, _) -> !id.equals("uhc/root") }
+            .toList()
+            .toMap()
+
+        val statsImage = ImageUtil.playerStatsImage(name, result, statsImageName, false)
+        val embeds = mutableListOf(EmbedUtil.playerStatsEmbed(name, statsImageName, false))
+        val files = mutableListOf(statsImage)
+
+        val advancementsImageName = "${username}_advancements.png"
+        val advancementsImage = ImageUtil.playerAdvancementsImage(name, advancements, advancementsImageName)
+        embeds.add(EmbedUtil.playerAdvancementsEmbed(advancementsImageName))
+        files.add(advancementsImage)
+        return embeds to files
     }
 
     fun getScoreboard(stat: String, show: Boolean): Pair<MessageEmbed, FileUpload?> {

@@ -5,10 +5,8 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import dev.minn.jda.ktx.interactions.commands.choice
 import dev.minn.jda.ktx.interactions.commands.option
-import dev.minn.jda.ktx.interactions.commands.restrict
 import dev.minn.jda.ktx.interactions.commands.subcommand
 import dev.minn.jda.ktx.interactions.components.getOption
-import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import org.bson.Document
@@ -27,7 +25,6 @@ class TeamCommand: AbstractCommand() {
     override fun getDescription() = "Used for creating and deleting teams"
 
     override fun buildCommand(command: SlashCommandData) {
-        command.restrict(true, Permission.ADMINISTRATOR)
         command.subcommand("create", "Creates a new team") {
             option<String>("name", "The team name", true)
         }

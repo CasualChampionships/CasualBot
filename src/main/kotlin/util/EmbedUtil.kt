@@ -105,14 +105,27 @@ object EmbedUtil {
         }
     }
 
-    fun playerStatsEmbed(username: String, imageName: String): MessageEmbed {
+    fun playerStatsEmbed(username: String, imageName: String, lifetime: Boolean): MessageEmbed {
+        val modifier = if (lifetime) "Lifetime" else "Latest"
         return Embed {
-            title = "$username's Stats"
+            title = "$username's $modifier Stats"
             color = 0x7ED6DF
             image = "attachment://$imageName"
             timestamp = Instant.now()
             footer {
-                name = "UHC Scoreboard"
+                name = "UHC Stats"
+                iconUrl = UHC_LOGO
+            }
+        }
+    }
+
+    fun playerAdvancementsEmbed(imageName: String): MessageEmbed {
+        return Embed {
+            color = 0x7ED6DF
+            image = "attachment://$imageName"
+            timestamp = Instant.now()
+            footer {
+                name = "UHC Advancements"
                 iconUrl = UHC_LOGO
             }
         }
@@ -136,7 +149,7 @@ object EmbedUtil {
         return Embed {
             title = "No Statistics Found"
             description = "Player $username does not have any recorded statistics"
-            color = 0xFF
+            color = 0xFF9494
         }
     }
 

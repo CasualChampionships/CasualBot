@@ -5,7 +5,6 @@ import dev.minn.jda.ktx.generics.getChannel
 import dev.minn.jda.ktx.interactions.commands.option
 import dev.minn.jda.ktx.interactions.commands.restrict
 import dev.minn.jda.ktx.interactions.components.getOption
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
