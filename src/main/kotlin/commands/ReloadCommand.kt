@@ -9,7 +9,7 @@ import util.EmbedUtil
 import util.ImageUtil
 
 class ReloadCommand: AbstractCommand() {
-    override fun getName() = "reload"
+    override val name = "reload"
 
     override fun getDescription() = "Reloads some of the bot"
 

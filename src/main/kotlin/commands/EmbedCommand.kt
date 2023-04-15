@@ -12,7 +12,7 @@ import util.CommandUtil
 import util.EmbedUtil
 
 class EmbedCommand: AbstractCommand() {
-    override fun getName() = "embed"
+    override val name = "embed"
 
     override fun getDescription() = "Gets the bot to post an embed"
 
@@ -28,7 +28,7 @@ class EmbedCommand: AbstractCommand() {
             return
         }
 
-        val embedName = event.getOption<String>("name") ?: return
+        val embedName = event.getOption<String>("name")!!
         event.reply("Embed found!").setEphemeral(true).queue()
 
         val embedHere = event.getOption<Boolean>("here") ?: false

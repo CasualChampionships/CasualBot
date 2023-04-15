@@ -8,11 +8,11 @@ import dev.minn.jda.ktx.messages.editMessage
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import util.CommandUtil.addPlayerArgument
-import util.CommandUtil.getPlayer
+import util.CommandUtil.getPlayerOr
 import util.EmbedUtil
 
 class StatCommand: AbstractCommand() {
-    override fun getName() = "stat"
+    override val name = "stat"
 
     override fun getDescription() = "Shows a specified player's stats"
 
@@ -23,13 +23,14 @@ class StatCommand: AbstractCommand() {
     }
 
     override fun onCommand(event: GenericCommandInteractionEvent) {
-        val username = event.getPlayer {
+        val (username, uuid) = event.getPlayerOr {
             event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it is not a valid username")).queue()
-        } ?: return
+            return
+        }
 
         val lifetime = event.getOption<Boolean>("lifetime") ?: false
         val hook = event.reply("Loading stats...").complete()
-        val (embeds, files) = BOT.db.getPlayerStats(username, lifetime)
+        val (embeds, files) = BOT.db.getPlayerStats(username, uuid, lifetime)
         hook.editMessage("@original", "", embeds, null, files, true).queue()
     }
 }

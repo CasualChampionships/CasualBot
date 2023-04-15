@@ -13,14 +13,14 @@ import org.bson.Document
 import util.CommandUtil
 import util.CommandUtil.addPlayerArgument
 import util.CommandUtil.addServerArgument
-import util.CommandUtil.getPlayer
-import util.CommandUtil.getServer
+import util.CommandUtil.getPlayerOr
+import util.CommandUtil.getServerOr
 import util.EmbedUtil
 
 class TeamCommand: AbstractCommand() {
     private val adminOnly = setOf("create", "delete", "setlogo", "setcolour")
 
-    override fun getName() = "team"
+    override val name = "team"
 
     override fun getDescription() = "Used for creating and deleting teams"
 
@@ -82,9 +82,8 @@ class TeamCommand: AbstractCommand() {
             "create" -> {
                 val name = event.getOption<String>("name")!!
                 val doc = Document().apply {
-                    put("_id", BOT.db.teams.countDocuments() + 1)
+                    put("_id", name)
                     put("prefix", name)
-                    put("name", name)
                     put("members", listOf<Any>())
                     put("logo", "")
                     put("wins", 0)
@@ -100,7 +99,7 @@ class TeamCommand: AbstractCommand() {
                 CommandUtil.loadCommands(BOT.jda)
             }
             "delete" -> {
-                val (name, _) = event.getServer {
+                val (name, _) = event.getServerOr {
                     if (BOT.db.teams.deleteOne(Filters.eq("name", it)).deletedCount == 0L) {
                         return event.reply("Failed to delete any team").queue()
                     }
@@ -113,7 +112,7 @@ class TeamCommand: AbstractCommand() {
                 CommandUtil.loadCommands(BOT.jda)
             }
             "setlogo" -> {
-                val (name, _) = event.getServer {
+                val (name, _) = event.getServerOr {
                     return event.reply("Invalid server: $it").queue()
                 }
                 val url = event.getOption<String>("url") ?: return
@@ -121,7 +120,7 @@ class TeamCommand: AbstractCommand() {
                 event.reply("Successfully updated logo").queue()
             }
             "setcolour" -> {
-                val (name, _) = event.getServer {
+                val (name, _) = event.getServerOr {
                     event.reply("Invalid server: $it").queue()
                     return
                 }
@@ -130,7 +129,7 @@ class TeamCommand: AbstractCommand() {
                 event.reply("Successfully updated colour").queue()
             }
             "clear" -> {
-                val (name, role) = event.getServer {
+                val (name, role) = event.getServerOr {
                     return event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it could not be found?!")).queue()
                 }
                 if (!CommandUtil.canMemberModifyTeam(event, role)) {
@@ -148,7 +147,7 @@ class TeamCommand: AbstractCommand() {
                 event.reply("Successfully cleared all teams").queue()
             }
             "add" -> {
-                val (name, role) = event.getServer {
+                val (name, role) = event.getServerOr {
                     event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it could not be found?!")).queue()
                     return
                 }
@@ -158,14 +157,15 @@ class TeamCommand: AbstractCommand() {
                     return
                 }
 
-                val username = event.getPlayer {
+                val (username, _) = event.getPlayerOr {
                     event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it is not a valid username")).queue()
-                } ?: return
+                    return
+                }
 
                 event.replyEmbeds(BOT.db.addPlayer(name, role.colorRaw, username)).queue()
             }
             "remove" -> {
-                val (name, role) = event.getServer {
+                val (name, role) = event.getServerOr {
                     event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it could not be found?!")).queue()
                     return
                 }
@@ -174,14 +174,15 @@ class TeamCommand: AbstractCommand() {
                     return
                 }
 
-                val username = event.getPlayer {
+                val (username, _) = event.getPlayerOr {
                     event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it is not a valid username")).queue()
-                } ?: return
+                    return
+                }
 
                 event.replyEmbeds(BOT.db.removePlayer(name, role.colorRaw, username)).queue()
             }
             "info" -> {
-                val (name, role) = event.getServer {
+                val (name, role) = event.getServerOr {
                     event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it could not be found?!")).queue()
                     return
                 }

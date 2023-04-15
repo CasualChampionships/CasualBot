@@ -116,19 +116,18 @@ object ImageUtil {
 
         graphics.color = Color(0xBFBFBF)
 
-        for ((id, value) in advancements) {
+        for ((title, value) in advancements) {
             graphics.font = MINECRAFT_FONT.deriveFont(32.0F)
-            val name = id.replace("uhc/", "").split("_").joinToString(" ") { it.capitalise() }
             graphics.drawImage(ADVANCEMENT_BANNER, bannerX, bannerY, null)
 
-            val width = graphics.fontMetrics.stringWidth(name)
+            val width = graphics.fontMetrics.stringWidth(title)
             var textShift = 50
             if (width > 240) {
                 val multiplier = 240.0F / width
                 graphics.font = MINECRAFT_FONT.deriveFont(32.0F * multiplier)
                 textShift -= (3.5 / multiplier).toInt()
             }
-            graphics.drawString(name, bannerX + 100, bannerY + textShift)
+            graphics.drawString(title, bannerX + 100, bannerY + textShift)
 
             val item = ITEM_CACHE.computeIfAbsent(value) {
                 val uri = URI.create("https://mc.nerothe.com/img/1.19.2/${value}.png")

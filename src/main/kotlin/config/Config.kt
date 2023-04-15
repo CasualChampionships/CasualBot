@@ -14,6 +14,8 @@ class Config private constructor(
     val mongoUrl: String,
     val guildId: Long,
     val suggestionsId: Long,
+    val winsId: Long,
+    val dev: Boolean,
     val embeds: MutableMap<String, Embed>,
     val nonTeams: Set<String>
 ) {
@@ -38,7 +40,9 @@ class Config private constructor(
             val mongo = json["mongoUrl"].asString
             val guildId = json["guildId"].asLong
             val suggestionsId = json["suggestionsId"].asLong
+            val winsId = json["winsId"].asLong
             val embedsJson = json["embeds"].asJsonObject
+            val dev = json["dev"]?.asBoolean ?: true
             val embeds = LinkedHashMap<String, Embed>()
             for (key in embedsJson.keySet()) {
                 embeds[key] = Embed.fromJson(embedsJson[key])
@@ -47,7 +51,7 @@ class Config private constructor(
             for (key in json["nonTeams"].asJsonArray) {
                 teams.add(key.asString)
             }
-            return Config(path, token, mongo, guildId, suggestionsId, embeds, teams)
+            return Config(path, token, mongo, guildId, suggestionsId, winsId, dev, embeds, teams)
         }
     }
 }

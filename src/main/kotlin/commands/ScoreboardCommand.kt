@@ -10,7 +10,7 @@ import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionE
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 
 class ScoreboardCommand: AbstractCommand() {
-    override fun getName() = "scoreboard"
+    override val name = "scoreboard"
 
     override fun getDescription() = "Shows the scoreboard for a given stat"
 

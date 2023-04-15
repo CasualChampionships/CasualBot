@@ -24,7 +24,7 @@ object CommandUtil {
         EmbedCommand(),
         ReloadCommand(),
         WinsCommand()
-    ).associateBy { it.getName() }
+    ).associateBy { it.name }
 
     val MOJANK = Mojang().connect()
 
@@ -35,7 +35,7 @@ object CommandUtil {
 
         jda.updateCommands {
             for (command in COMMANDS.values) {
-                slash(command.getName(), command.getDescription()) {
+                slash(command.name, command.getDescription()) {
                     command.buildCommand(this)
                 }
             }
@@ -68,10 +68,10 @@ object CommandUtil {
         return false
     }
 
-    fun getCorrectName(username: String): String? {
+    fun getNameAndUUID(username: String): Pair<String, String>? {
         return try {
             val uuid = MOJANK.getUUIDOfUsername(username)
-            MOJANK.getPlayerProfile(uuid).username
+            MOJANK.getPlayerProfile(uuid).username to addDashes(uuid)
         } catch (e: RuntimeException) {
             null
         }
@@ -103,22 +103,30 @@ object CommandUtil {
         option<String>("username", "The player's Minecraft username", true)
     }
 
-    inline fun GenericCommandInteractionEvent.getServer(invalid: (String?) -> Nothing): Pair<String, Role> {
-        val option = getOption("server") ?: invalid(null)
-        val name = option.asString
-        val regex = if (name.matches(Regex("^\\d+$"))) "_\\d+$" else "\\d+$"
-        val roleName = name.replace(Regex(regex), "")
+    inline fun GenericCommandInteractionEvent.getServerOr(invalid: (String?) -> Nothing): Pair<String, Role> {
+        val option = getOption<String>("server")!!
+        val regex = if (option.matches(Regex("^\\d+$"))) "_\\d+$" else "\\d+$"
+        val roleName = option.replace(Regex(regex), "")
         val role = guild?.getRolesByName(roleName, true)?.firstOrNull()
         if (role == null || !role.isServerRole()) {
-            invalid(name)
+            invalid(option)
         }
-        return name to role
+        return option to role
     }
 
-    fun GenericCommandInteractionEvent.getPlayer(invalid: (String) -> Unit): String? {
-        val username = getOption<String>("username") ?: return null
-        val name = getCorrectName(username)
+    inline fun GenericCommandInteractionEvent.getPlayerOr(invalid: (String) -> Nothing): Pair<String, String> {
+        val username = getOption<String>("username")!!
+        val name = getNameAndUUID(username)
         name ?: invalid(username)
         return name
+    }
+
+    private fun addDashes(uuid: String): String {
+        val builder = StringBuilder(uuid)
+        builder.insert(20, '-')
+        builder.insert(16, '-')
+        builder.insert(12, '-')
+        builder.insert(8, '-')
+        return builder.toString()
     }
 }

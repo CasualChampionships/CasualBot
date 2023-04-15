@@ -4,7 +4,7 @@ import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionE
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 
 abstract class AbstractCommand {
-    abstract fun getName(): String
+    abstract val name: String
 
     abstract fun getDescription(): String
 

@@ -1,5 +1,6 @@
 package database
 
+import CONFIG
 import LOGGER
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientURI
@@ -16,10 +17,10 @@ import util.ImageUtil
 
 class DataBase(url: String) {
     val client = MongoClient(MongoClientURI(url))
-    val database = client.getDatabase("UHC")
+    val database = client.getDatabase(if (CONFIG.dev) "TestUHC" else "CasualUHC")
     val teams = database.getCollection("teams")
-    val latestStats = database.getCollection("test_player_stats")
-    val totalStats = database.getCollection("test_total_player_stats")
+    val latestStats = database.getCollection("last_player_stats")
+    val totalStats = database.getCollection("combined_player_stats")
 
     fun addPlayer(serverName: String, serverColour: Int, username: String): MessageEmbed {
         getPlayerTeam(username)?.let {
@@ -31,7 +32,7 @@ class DataBase(url: String) {
         if (team.size >= 5) {
             return EmbedUtil.fullTeamEmbed(serverName, team, getTeamLogo(serverName), serverColour)
         }
-        teams.updateOne(Filters.eq("name", serverName), Updates.push("members", username))
+        teams.updateOne(Filters.eq("_id", serverName), Updates.push("members", username))
         return EmbedUtil.addPlayerSuccessEmbed(username, serverName, team, serverColour)
     }
 
@@ -40,7 +41,7 @@ class DataBase(url: String) {
         if (username !in team) {
             return EmbedUtil.playerNotInTeamEmbed(username, server, team, colour)
         }
-        teams.updateOne(Filters.eq("name", server), Updates.pull("members", username))
+        teams.updateOne(Filters.eq("_id", server), Updates.pull("members", username))
         return EmbedUtil.removePlayerSuccessEmbed(username, server, team.filter { it != username }, getTeamLogo(server), colour)
     }
 
@@ -49,7 +50,7 @@ class DataBase(url: String) {
     }
 
     fun clearTeam(server: String) {
-        teams.updateOne(Filters.eq("name", server), Updates.set("members", listOf<Any>()))
+        teams.updateOne(Filters.eq("_id", server), Updates.set("members", listOf<Any>()))
     }
 
     fun clearAllTeams() {
@@ -68,42 +69,41 @@ class DataBase(url: String) {
     }
 
     fun getTeamWins(): Map<String, String> {
-        return teams.find().sort(Sorts.descending("wins")).map { it["name"].toString() to it["wins"].toString() }.toMap()
+        return teams.find().sort(Sorts.descending("wins")).map { it["_id"].toString() to it["wins"].toString() }.toMap()
     }
 
     fun getTeamStats(): MessageEmbed {
         return EmbedUtil.winsEmbed(getTeamWins())
     }
 
-    fun getPlayerStats(username: String, lifetime: Boolean = false): Pair<List<MessageEmbed>, List<FileUpload>> {
-        val name = CommandUtil.getCorrectName(username)
-        name ?: return listOf(EmbedUtil.noStatsEmbed(username)) to listOf()
-
+    fun getPlayerStats(username: String, uuid: String, lifetime: Boolean = false): Pair<List<MessageEmbed>, List<FileUpload>> {
         if (lifetime) {
-            val result = totalStats.find(Filters.eq("_id", name)).first()
+            val result = totalStats.find(Filters.eq("_id", uuid)).first()
             result ?: return listOf(EmbedUtil.noStatsEmbed(username)) to listOf()
             val statsImageName = "${username}_stats.png"
             result.remove("_id")
-            val statsImage = ImageUtil.playerStatsImage(name, result, statsImageName, true)
-            return listOf(EmbedUtil.playerStatsEmbed(name, statsImageName, true)) to listOf(statsImage)
+            val statsImage = ImageUtil.playerStatsImage(username, result, statsImageName, true)
+            return listOf(EmbedUtil.playerStatsEmbed(username, statsImageName, true)) to listOf(statsImage)
         }
 
-        val result = latestStats.find(Filters.eq("_id", name)).first()
+        val result = latestStats.find(Filters.eq("_id", uuid)).first()
         result ?: return listOf(EmbedUtil.noStatsEmbed(username)) to listOf()
         val statsImageName = "${username}_stats.png"
         result.remove("_id")
+        result.remove("participated")
         val advancements = (result.remove("advancements") as ArrayList<*>).stream()
-            .map { o -> (o as Document).getString("id") to o.getString("item") }
-            .filter { (id, _) -> !id.equals("uhc/root") }
+            .map { o -> (o as Document) }
+            .filter { o -> !o.getString("id").equals("uhc:root") }
+            .map { o -> o.getString("title") to o.getString("item") }
             .toList()
             .toMap()
 
-        val statsImage = ImageUtil.playerStatsImage(name, result, statsImageName, false)
-        val embeds = mutableListOf(EmbedUtil.playerStatsEmbed(name, statsImageName, false))
+        val statsImage = ImageUtil.playerStatsImage(username, result, statsImageName, false)
+        val embeds = mutableListOf(EmbedUtil.playerStatsEmbed(username, statsImageName, false))
         val files = mutableListOf(statsImage)
 
         val advancementsImageName = "${username}_advancements.png"
-        val advancementsImage = ImageUtil.playerAdvancementsImage(name, advancements, advancementsImageName)
+        val advancementsImage = ImageUtil.playerAdvancementsImage(username, advancements, advancementsImageName)
         embeds.add(EmbedUtil.playerAdvancementsEmbed(advancementsImageName))
         files.add(advancementsImage)
         return embeds to files
@@ -122,13 +122,13 @@ class DataBase(url: String) {
 
     fun getTeams(): Map<String, String> {
         return teams.find().map {
-            val teamName = it.getString("name")
+            val teamName = it.getString("_id")
             teamName to (it.getString("role") ?: teamName)
         }.toMap()
     }
 
     private fun getTeamDocument(teamName: String): Document? {
-        val teams = teams.find(Filters.eq("name", teamName))
+        val teams = teams.find(Filters.eq("_id", teamName))
         return teams.first().also {
             it ?: LOGGER.info("No team with name $teamName")
         }
@@ -139,7 +139,7 @@ class DataBase(url: String) {
             val members = team.getList("members", String::class.java)
             for (member in members) {
                 if (username == member) {
-                    return team.getString("name")
+                    return team.getString("_id")
                 }
             }
         }
