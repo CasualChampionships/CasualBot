@@ -100,12 +100,12 @@ class TeamCommand: AbstractCommand() {
             }
             "delete" -> {
                 val (name, _) = event.getServerOr {
-                    if (BOT.db.teams.deleteOne(Filters.eq("name", it)).deletedCount == 0L) {
+                    if (BOT.db.teams.deleteOne(Filters.eq("_id", it)).deletedCount == 0L) {
                         return event.reply("Failed to delete any team").queue()
                     }
                     return event.reply("Invalid role: $it, but successfully deleted team from database").queue()
                 }
-                if (BOT.db.teams.deleteOne(Filters.eq("name", name)).deletedCount == 0L) {
+                if (BOT.db.teams.deleteOne(Filters.eq("_id", name)).deletedCount == 0L) {
                     return event.reply("Failed to delete any team").queue()
                 }
                 event.reply("Successfully delete team: $name").queue()
@@ -116,7 +116,7 @@ class TeamCommand: AbstractCommand() {
                     return event.reply("Invalid server: $it").queue()
                 }
                 val url = event.getOption<String>("url") ?: return
-                BOT.db.teams.findOneAndUpdate(Filters.eq("name", name), Updates.set("logo", url))
+                BOT.db.teams.findOneAndUpdate(Filters.eq("_id", name), Updates.set("logo", url))
                 event.reply("Successfully updated logo").queue()
             }
             "setcolour" -> {
@@ -125,7 +125,7 @@ class TeamCommand: AbstractCommand() {
                     return
                 }
                 val colour = event.getOption<String>("colour") ?: return
-                BOT.db.teams.findOneAndUpdate(Filters.eq("name", name), Updates.set("colour", colour))
+                BOT.db.teams.findOneAndUpdate(Filters.eq("_id", name), Updates.set("colour", colour))
                 event.reply("Successfully updated colour").queue()
             }
             "clear" -> {

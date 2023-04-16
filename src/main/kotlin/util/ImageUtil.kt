@@ -78,7 +78,11 @@ object ImageUtil {
             yPos += deltaValues
             graphics.color = Color(0xFF5555)
 
-            val score = if ((value as Double).isNaN()) "None" else DECIMAL_FORMAT.format(value)
+            val score = when (value) {
+                is Double -> if (value.isNaN()) "None" else DECIMAL_FORMAT.format(value)
+                is Boolean -> if (value) "Yes" else "No"
+                else -> value.toString()
+            }
             graphics.drawString(score, xPos, yPos)
             yPos += deltaStats
         }
