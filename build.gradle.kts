@@ -16,8 +16,8 @@ repositories {
 }
 
 dependencies {
-    implementation("net.dv8tion:JDA:5.0.0-alpha.19")
-    implementation("com.github.minndevelopment:jda-ktx:fc7d7de58af04e25eb58c0e8b4923621e3179719")
+    implementation("net.dv8tion:JDA:5.0.0-beta.13")
+    implementation("com.github.minndevelopment:jda-ktx:9370cb13cc64646862e6f885959d67eb4b157e4a")
     implementation("com.google.code.gson:gson:2.9.0")
     implementation("org.mongodb:mongo-java-driver:3.12.11")
     implementation("com.github.SparklingComet:java-mojang-api:-SNAPSHOT")
@@ -33,9 +33,6 @@ tasks.jar {
 
 tasks.shadowJar {
     // from("LICENSE")
-
-    val name: String? = null
-    archiveClassifier.set(name)
 
     // archiveFileName.set("${rootProject.name}-${archiveVersion.get()}.jar")
 }

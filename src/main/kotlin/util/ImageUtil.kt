@@ -134,7 +134,7 @@ object ImageUtil {
             graphics.drawString(title, bannerX + 100, bannerY + textShift)
 
             val item = ITEM_CACHE.computeIfAbsent(value) {
-                val uri = URI.create("https://mc.nerothe.com/img/1.19.2/${value}.png")
+                val uri = URI.create("https://mc.nerothe.com/img/1.20.1/${value}.png")
                 val request = HttpRequest.newBuilder(uri).build()
                 val response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofByteArray())
                 if (response.statusCode() == 200) {

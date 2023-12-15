@@ -3,13 +3,11 @@ package event
 import BOT
 import CONFIG
 import LOGGER
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 import net.dv8tion.jda.api.entities.emoji.Emoji
-import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
-import net.dv8tion.jda.internal.requests.Route.Emojis
 import util.CommandUtil
 import util.EmbedUtil
 
