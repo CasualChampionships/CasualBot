@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.6.10"
+    kotlin("jvm") version "1.9.24"
 
     id("com.github.johnrengelman.shadow") version "7.1.2"
 
@@ -16,8 +16,8 @@ repositories {
 }
 
 dependencies {
-    implementation("net.dv8tion:JDA:5.0.0-beta.13")
-    implementation("com.github.minndevelopment:jda-ktx:9370cb13cc64646862e6f885959d67eb4b157e4a")
+    implementation("net.dv8tion:JDA:5.0.0-beta.20")
+    implementation("club.minnced:jda-ktx:0.11.0-beta.20")
     implementation("com.google.code.gson:gson:2.9.0")
     implementation("org.mongodb:mongo-java-driver:3.12.11")
     implementation("com.github.SparklingComet:java-mojang-api:-SNAPSHOT")

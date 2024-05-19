@@ -168,10 +168,10 @@ object EmbedUtil {
         }
     }
 
-    fun customEmbed(key: String): Triple<MessageEmbed, Long, Long> {
+    fun customEmbed(key: String): Pair<MessageEmbed, Long> {
         val embed = CONFIG.embeds[key]
-        embed ?: return Triple(somethingWentWrongEmbed("Embed not found..."), 1, 1)
-        return Triple(embed.toEmbed(), embed.messageId, embed.channelId)
+        embed ?: return Pair(somethingWentWrongEmbed("Embed not found..."), 1)
+        return Pair(embed.toEmbed(), embed.channelId)
     }
 
     fun winsEmbed(teams: Map<String, String>): MessageEmbed {

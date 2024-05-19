@@ -13,8 +13,7 @@ class Config private constructor(
     val token: String,
     val mongoUrl: String,
     val guildId: Long,
-    val suggestionsId: Long,
-    val winsId: Long,
+    val channelIds: JsonObject,
     val dev: Boolean,
     val embeds: MutableMap<String, Embed>,
     val nonTeams: Set<String>
@@ -39,8 +38,7 @@ class Config private constructor(
             val token = json["token"].asString
             val mongo = json["mongoUrl"].asString
             val guildId = json["guildId"].asLong
-            val suggestionsId = json["suggestionsId"].asLong
-            val winsId = json["winsId"].asLong
+            val channelIds = json["channelIds"].asJsonObject
             val embedsJson = json["embeds"].asJsonObject
             val dev = json["dev"]?.asBoolean ?: true
             val embeds = LinkedHashMap<String, Embed>()
@@ -51,7 +49,7 @@ class Config private constructor(
             for (key in json["nonTeams"].asJsonArray) {
                 teams.add(key.asString)
             }
-            return Config(path, token, mongo, guildId, suggestionsId, winsId, dev, embeds, teams)
+            return Config(path, token, mongo, guildId, channelIds, dev, embeds, teams)
         }
     }
 }
@@ -60,7 +58,6 @@ class Embed private constructor(
     val name: String,
     val fields: Map<String, List<String>>,
     val colour: Int,
-    val messageId: Long,
     val channelId: Long
 ) {
     fun toEmbed(): MessageEmbed {
@@ -99,9 +96,8 @@ class Embed private constructor(
                     embeds[key] = contents
                 }
             }
-            val messageId = jObject["messageId"]?.asLong ?: -1
             val channelId = jObject["channelId"]?.asLong ?: -1
-            return Embed(jObject["title"].asString, embeds, jObject["colour"].asInt, messageId, channelId)
+            return Embed(jObject["title"].asString, embeds, jObject["colour"].asInt, channelId)
         }
     }
 }
