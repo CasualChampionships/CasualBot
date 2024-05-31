@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 
 object MessageUtil {
 
-    private fun firstMessage(jda: JDA, channelId: Long, contents: List<String>, embeds: List<MessageEmbed?>) {
+    fun firstMessage(jda: JDA, channelId: Long, contents: List<String>, embeds: List<MessageEmbed?>) {
         val channel: TextChannel = jda.getTextChannelById(channelId) ?: return
 
         // Make sure to delete all messages that aren't from the bot. The limit is 100 messages, but it should never reach that

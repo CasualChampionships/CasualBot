@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import util.CommandUtil
 import util.EmbedUtil
+import util.EventUtil
 import util.MessageUtil
 
 class EventHandler: ListenerAdapter() {
@@ -19,6 +20,7 @@ class EventHandler: ListenerAdapter() {
         LOGGER.info("UHC Bot Started!")
         CommandUtil.loadCommands(event.jda)
         MessageUtil.sendInfoMessages(event.jda)
+        EventUtil.checkIfEventHasPassed(event.jda)
     }
 
     override fun onMessageReceived(event: MessageReceivedEvent) {

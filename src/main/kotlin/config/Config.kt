@@ -13,7 +13,9 @@ class Config private constructor(
     val token: String,
     val mongoUrl: String,
     val guildId: Long,
+    val event: JsonObject,
     val channelIds: JsonObject,
+    val serverChannelIds: JsonObject,
     val dev: Boolean,
     val embeds: MutableMap<String, Embed>,
     val nonTeams: Set<String>
@@ -29,6 +31,26 @@ class Config private constructor(
         }
     }
 
+    fun updateEvent() {
+        val contents = Files.readString(path)
+        val json = GSON.fromJson(contents, JsonObject::class.java)
+        val eventJson = json["event"].asJsonObject
+        for (key in eventJson.keySet()) {
+            event.add(key, eventJson[key])
+        }
+    }
+
+    fun writeEventInfoToFile(name: String, description: String, date: String, time: String) {
+        val contents = Files.readString(path)
+        val json = GSON.fromJson(contents, JsonObject::class.java)
+        val eventJson = json["event"].asJsonObject
+        eventJson.addProperty("name", name)
+        eventJson.addProperty("description", description)
+        eventJson.addProperty("date", date)
+        eventJson.addProperty("time", time)
+        Files.write(path, GSON.toJson(json).toByteArray())
+    }
+
     companion object {
         private val GSON = Gson()
 
@@ -38,7 +60,9 @@ class Config private constructor(
             val token = json["token"].asString
             val mongo = json["mongoUrl"].asString
             val guildId = json["guildId"].asLong
+            val event = json["event"].asJsonObject
             val channelIds = json["channelIds"].asJsonObject
+            val serverChannelIds = json["serverChannelIds"].asJsonObject
             val embedsJson = json["embeds"].asJsonObject
             val dev = json["dev"]?.asBoolean ?: true
             val embeds = LinkedHashMap<String, Embed>()
@@ -49,7 +73,7 @@ class Config private constructor(
             for (key in json["nonTeams"].asJsonArray) {
                 teams.add(key.asString)
             }
-            return Config(path, token, mongo, guildId, channelIds, dev, embeds, teams)
+            return Config(path, token, mongo, guildId, event, channelIds, serverChannelIds, dev, embeds, teams)
         }
     }
 }
