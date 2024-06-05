@@ -21,9 +21,8 @@ object CommandUtil {
         StatCommand(),
         ScoreboardCommand(),
         TeamCommand(),
-        EmbedCommand(),
         ReloadCommand(),
-        WinsCommand()
+        EventCommand()
     ).associateBy { it.name }
 
     val MOJANK = Mojang().connect()

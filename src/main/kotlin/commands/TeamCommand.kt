@@ -16,8 +16,9 @@ import util.CommandUtil.addServerArgument
 import util.CommandUtil.getPlayerOr
 import util.CommandUtil.getServerOr
 import util.EmbedUtil
+import util.EventUtil
 
-class TeamCommand: AbstractCommand() {
+class TeamCommand : AbstractCommand() {
     private val adminOnly = setOf("create", "delete", "setlogo", "setcolour")
 
     override val name = "team"
@@ -74,7 +75,7 @@ class TeamCommand: AbstractCommand() {
     }
 
     override fun onCommand(event: GenericCommandInteractionEvent) {
-        if (event.subcommandName in adminOnly && !CommandUtil.isMemberAdmin(event)) {
+        if (event.subcommandName in adminOnly && !CommandUtil.isMemberAdmin(event) || !EventUtil.isThereAnEventAlready()) {
             event.replyEmbeds(EmbedUtil.noPermission()).queue()
             return
         }
@@ -98,6 +99,7 @@ class TeamCommand: AbstractCommand() {
                 event.reply("Successfully created team: $name").queue()
                 CommandUtil.loadCommands(BOT.jda)
             }
+
             "delete" -> {
                 val (name, _) = event.getServerOr {
                     if (BOT.db.teams.deleteOne(Filters.eq("_id", it)).deletedCount == 0L) {
@@ -111,6 +113,7 @@ class TeamCommand: AbstractCommand() {
                 event.reply("Successfully delete team: $name").queue()
                 CommandUtil.loadCommands(BOT.jda)
             }
+
             "setlogo" -> {
                 val (name, _) = event.getServerOr {
                     return event.reply("Invalid server: $it").queue()
@@ -119,6 +122,7 @@ class TeamCommand: AbstractCommand() {
                 BOT.db.teams.findOneAndUpdate(Filters.eq("_id", name), Updates.set("logo", url))
                 event.reply("Successfully updated logo").queue()
             }
+
             "setcolour" -> {
                 val (name, _) = event.getServerOr {
                     event.reply("Invalid server: $it").queue()
@@ -128,6 +132,7 @@ class TeamCommand: AbstractCommand() {
                 BOT.db.teams.findOneAndUpdate(Filters.eq("_id", name), Updates.set("colour", colour))
                 event.reply("Successfully updated colour").queue()
             }
+
             "clear" -> {
                 val (name, role) = event.getServerOr {
                     return event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it could not be found?!")).queue()
@@ -138,6 +143,7 @@ class TeamCommand: AbstractCommand() {
                 BOT.db.clearTeam(name)
                 event.reply("Successfully cleared $name").queue()
             }
+
             "clearall" -> {
                 if (!CommandUtil.isMemberAdmin(event)) {
                     event.replyEmbeds(EmbedUtil.noPermission()).queue()
@@ -146,6 +152,7 @@ class TeamCommand: AbstractCommand() {
                 BOT.db.clearAllTeams()
                 event.reply("Successfully cleared all teams").queue()
             }
+
             "add" -> {
                 val (name, role) = event.getServerOr {
                     event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it could not be found?!")).queue()
@@ -164,6 +171,7 @@ class TeamCommand: AbstractCommand() {
 
                 event.replyEmbeds(BOT.db.addPlayer(name, role.colorRaw, username)).queue()
             }
+
             "remove" -> {
                 val (name, role) = event.getServerOr {
                     event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it could not be found?!")).queue()
@@ -181,6 +189,7 @@ class TeamCommand: AbstractCommand() {
 
                 event.replyEmbeds(BOT.db.removePlayer(name, role.colorRaw, username)).queue()
             }
+
             "info" -> {
                 val (name, role) = event.getServerOr {
                     event.replyEmbeds(EmbedUtil.somethingWentWrongEmbed("$it could not be found?!")).queue()

@@ -8,7 +8,8 @@ import util.Util.capitaliseAll
 import java.time.Instant
 
 object EmbedUtil {
-    private const val UHC_LOGO = "https://cdn.discordapp.com/attachments/775083888602513439/804920103850344478/UHC_icon.png"
+    private const val UHC_LOGO =
+        "https://cdn.discordapp.com/attachments/775083888602513439/804920103850344478/UHC_icon.png"
 
     private fun getPlayerHead(username: String): String {
         return "https://visage.surgeplay.com/bust/${CommandUtil.MOJANK.getUUIDOfUsername(username)}"
@@ -168,10 +169,10 @@ object EmbedUtil {
         }
     }
 
-    fun customEmbed(key: String): Triple<MessageEmbed, Long, Long> {
+    fun customEmbed(key: String): Pair<MessageEmbed, Long> {
         val embed = CONFIG.embeds[key]
-        embed ?: return Triple(somethingWentWrongEmbed("Embed not found..."), 1, 1)
-        return Triple(embed.toEmbed(), embed.messageId, embed.channelId)
+        embed ?: return Pair(somethingWentWrongEmbed("Embed not found..."), 1)
+        return Pair(embed.toEmbed(), embed.channelId)
     }
 
     fun winsEmbed(teams: Map<String, String>): MessageEmbed {
@@ -187,6 +188,29 @@ object EmbedUtil {
         if (members.isNullOrEmpty()) {
             return "**No Members**"
         }
-        return "**Current Team**\n${MarkdownSanitizer.sanitize(members.joinToString("\n"), MarkdownSanitizer.SanitizationStrategy.ESCAPE)}"
+        return "**Current Team**\n${
+            MarkdownSanitizer.sanitize(
+                members.joinToString("\n"),
+                MarkdownSanitizer.SanitizationStrategy.ESCAPE
+            )
+        }"
+    }
+
+    fun nextEventStatusEmbed(name: String, desc: String, timestamp: String): MessageEmbed {
+        return Embed {
+            title = "Next Event: $name"
+            description = "$desc\n\nThe time and date of this event will be: \n$timestamp"
+            color = 0x206694
+            thumbnail = UHC_LOGO
+        }
+    }
+
+    fun noEventScheduledEmbed(): MessageEmbed {
+        return Embed {
+            title = "No Events Scheduled"
+            description = "There is currently no events scheduled. Check back later for updates!"
+            color = 0x206694
+            thumbnail = UHC_LOGO
+        }
     }
 }
