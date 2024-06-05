@@ -1,0 +1,13 @@
+[versions]
+coroutines = "1.9.0-RC"
+jda        = "5.0.0-beta.20"
+jda-ktx    = "0.11.0-beta.20"
+kmongo     = "5.1.0"
+okhttp     = "4.10.0"
+
+[libraries]
+coroutines      = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core"   , version.ref = "coroutines" }
+jda             = { module = "net.dv8tion:JDA"                                 , version.ref = "jda" }
+jda-ktx         = { module = "club.minnced:jda-ktx"                            , version.ref = "jda-ktx" }
+kmongo          = { module = "org.litote.kmongo:kmongo-coroutine-serialization", version.ref = "kmongo" }
+okhttp          = { module = "com.squareup.okhttp3:okhttp"                     , version.ref = "okhttp"}

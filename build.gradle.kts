@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm") version "1.9.24"
 
@@ -7,8 +9,10 @@ plugins {
     application
 }
 
-group = "net.casualuhc"
+group = "net.casual"
 version = "0.0.1"
+
+application.mainClass.set("CasualBotKt")
 
 repositories {
     mavenCentral()
@@ -16,47 +20,22 @@ repositories {
 }
 
 dependencies {
-    implementation("net.dv8tion:JDA:5.0.0-beta.20")
-    implementation("club.minnced:jda-ktx:0.11.0-beta.20")
-    implementation("com.google.code.gson:gson:2.9.0")
-    implementation("org.mongodb:mongo-java-driver:3.12.11")
-    implementation("com.github.SparklingComet:java-mojang-api:-SNAPSHOT")
+    implementation(kotlin("stdlib-jdk8"))
 
-    testImplementation(kotlin("test"))
+    implementation(libs.coroutines)
+
+    implementation(libs.jda)
+    implementation(libs.jda.ktx)
+    implementation(libs.kmongo)
+    implementation(libs.okhttp)
 }
 
-tasks.jar {
-    enabled = false
-
-    archiveClassifier.set("default")
+tasks.compileKotlin {
+    kotlinOptions.jvmTarget = "17"
 }
 
 tasks.shadowJar {
     // from("LICENSE")
 
     // archiveFileName.set("${rootProject.name}-${archiveVersion.get()}.jar")
-}
-
-tasks.distTar {
-    dependsOn("shadowJar")
-}
-
-tasks.distZip {
-    dependsOn("shadowJar")
-}
-
-tasks.startScripts {
-    dependsOn("shadowJar")
-}
-
-application {
-    mainClass.set("UHCBotKt")
-}
-
-publishing {
-    publications {
-        register("mavenJava", MavenPublication::class) {
-            artifact(tasks["shadowJar"])
-        }
-    }
 }
