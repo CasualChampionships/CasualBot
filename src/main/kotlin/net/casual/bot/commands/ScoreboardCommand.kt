@@ -130,7 +130,7 @@ object ScoreboardCommand: Command {
         }
 
         if (scoreboard.isEmpty()) {
-            loading.replace("Failed").queue()
+            loading.replace(EmbedUtil.somethingWentWrongEmbed("The scoreboard is empty!")).queue()
             return
         }
 
