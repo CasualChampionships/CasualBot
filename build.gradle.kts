@@ -1,7 +1,6 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     kotlin("jvm") version "1.9.24"
+    kotlin("plugin.serialization") version "1.9.24"
 
     id("com.github.johnrengelman.shadow") version "7.1.2"
 
@@ -12,11 +11,13 @@ plugins {
 group = "net.casual"
 version = "0.0.1"
 
-application.mainClass.set("CasualBotKt")
+application.mainClass.set("net.casual.bot.CasualBot")
 
 repositories {
     mavenCentral()
     maven("https://jitpack.io/")
+    maven("https://repo.fruxz.dev/releases/")
+    mavenLocal()
 }
 
 dependencies {
@@ -26,8 +27,19 @@ dependencies {
 
     implementation(libs.jda)
     implementation(libs.jda.ktx)
-    implementation(libs.kmongo)
-    implementation(libs.okhttp)
+    implementation(libs.json)
+
+    implementation(libs.logback)
+    implementation(libs.klogging)
+
+    implementation(libs.mojank)
+
+    implementation(libs.casual.database)
+
+    implementation(libs.ktor.core)
+    implementation(libs.ktor.cio)
+    implementation(libs.ktor.serialization)
+    implementation(libs.ktor.negotiation)
 }
 
 tasks.compileKotlin {

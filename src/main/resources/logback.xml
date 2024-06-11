@@ -1,0 +1,23 @@
+<configuration>
+
+    <!-- Define the root logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+    <!-- Define a console appender with color support -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%blue([%d{HH:mm:ss}]) %green([%thread/%level]) %cyan(\(%logger{0}\)): %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Disable HikariCP loggers -->
+    <logger name="com.zaxxer.hikari" level="OFF" />
+    <logger name="com.zaxxer.hikari.HikariConfig" level="OFF" />
+    <logger name="com.zaxxer.hikari.HikariDataSource" level="OFF" />
+    <logger name="com.zaxxer.hikari.pool" level="OFF" />
+    <logger name="com.zaxxer.hikari.pool.HikariPool" level="OFF" />
+    <logger name="com.zaxxer.hikari.util" level="OFF" />
+    <logger name="com.zaxxer.hikari.util.ConcurrentBag" level="OFF" />
+</configuration>
