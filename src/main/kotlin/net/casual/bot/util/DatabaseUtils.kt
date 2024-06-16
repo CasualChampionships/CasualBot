@@ -16,7 +16,9 @@ object DatabaseUtils {
         if (player != null) {
             return player
         }
-        val profile = CachedMojank.usernameToSimpleProfile(username).getOrNull() ?: return null
+        val profile = CachedMojank.attempt(3) {
+            usernameToSimpleProfile(username)
+        }.getOrNull() ?: return null
         player = getDiscordPlayer(profile.id)
         if (player != null) {
             player.name = profile.name
@@ -35,7 +37,9 @@ object DatabaseUtils {
         if (player != null) {
             return player
         }
-        val username = CachedMojank.uuidToUsername(uuid).getOrNull() ?: return null
+        val username = CachedMojank.attempt(3) {
+            uuidToUsername(uuid)
+        }.getOrNull() ?: return null
         return transaction {
             DiscordPlayer.new(uuid) {
                 name = username

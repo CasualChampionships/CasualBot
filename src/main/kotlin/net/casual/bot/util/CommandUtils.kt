@@ -63,6 +63,8 @@ object CommandUtils {
         option: String = "username"
     ): Pair<SimpleMojankProfile?, String> {
         val username = event.getOption<String>(option) ?: throw IllegalArgumentException("Unknown option $option!")
-        return CachedMojank.usernameToSimpleProfile(username).getOrNull() to username
+        return CachedMojank.attempt {
+            usernameToSimpleProfile(username)
+        }.getOrNull() to username
     }
 }
