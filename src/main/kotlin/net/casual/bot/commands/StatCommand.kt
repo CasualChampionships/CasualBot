@@ -40,7 +40,10 @@ object StatCommand: Command {
     init {
         provider("duels", DuelMinigameStats) {
             stat("kills", DuelMinigameStats.kills.sum())
-            lifetimeStat("wins", DuelMinigameStats.won.sum())
+            stat("damage_dealt", DuelMinigameStats.damageDealt.sum())
+            stat("damage_taken", DuelMinigameStats.damageTaken.sum())
+            stat("damage_healed", DuelMinigameStats.damageHealed.sum())
+            stat("wins", DuelMinigameStats.won.sum())
         }
         provider("uhc", UHCMinigameStats) {
             stat("kills", UHCMinigameStats.kills.sum())

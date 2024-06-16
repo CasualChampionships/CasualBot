@@ -230,7 +230,8 @@ object TeamCommand: Command {
             return
         }
 
-        if (team.players.count() >= 5) {
+
+        if (CasualBot.database.transaction { team.players.count() } >= 5) {
             loading.replace(EmbedUtil.fullTeamEmbed(team)).queue()
             return
         }

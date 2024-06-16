@@ -6,8 +6,8 @@ jda-ktx         = "0.11.0-beta.20"
 ktor            = "2.3.11"
 klogging        = "5.1.0"
 logback         = "1.4.12"
-mojank          = "1.0.0"
-casual-database = "8e36a0a2b63085d7f2b514af1ba0f0d8ff8118ae"
+mojank          = "1.0.1"
+casual-database = "895c3fa3a264055d41106457886b1299d302eab6"
 
 [libraries]
 coroutines      = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core"   , version.ref = "coroutines" }

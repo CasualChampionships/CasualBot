@@ -36,9 +36,9 @@ object ScoreboardCommand: Command {
     init {
         provider("duels", DuelMinigameStats) {
             stat("kills", DuelMinigameStats.kills.sum())
-            stat("damage_taken", UHCMinigameStats.damageTaken.sum())
-            stat("damage_healed", UHCMinigameStats.damageHealed.sum())
-            stat("damage_dealt", UHCMinigameStats.damageDealt.sum())
+            stat("damage_taken", DuelMinigameStats.damageTaken.sum())
+            stat("damage_healed", DuelMinigameStats.damageHealed.sum())
+            stat("damage_dealt", DuelMinigameStats.damageDealt.sum())
 
             lifetimeStat("most_kills", DuelMinigameStats.kills.max())
             lifetimeStat("wins", DuelMinigameStats.won.sum())
@@ -48,7 +48,7 @@ object ScoreboardCommand: Command {
             stat("damage_taken", UHCMinigameStats.damageTaken.sum())
             stat("damage_healed", UHCMinigameStats.damageHealed.sum())
             stat("damage_dealt", UHCMinigameStats.damageDealt.sum())
-            stat("heads_consumer", UHCMinigameStats.headsConsumed.sum())
+            stat("heads_consumed", UHCMinigameStats.headsConsumed.sum())
             stat("time_alive", UHCMinigameStats.aliveTime.sum())
             stat("time_crouched", UHCMinigameStats.crouchTime.sum())
             stat("jumps", UHCMinigameStats.jumps.sum())
