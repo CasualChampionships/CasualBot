@@ -1,7 +1,5 @@
 package net.casual.bot.util
 
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -10,14 +8,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.casual.bot.CasualBot
 import net.casual.stat.FormattedStat
-import net.casual.stat.ResolvedPlayerStat
 import net.casual.util.Named
 import net.dv8tion.jda.api.utils.FileUpload
 import java.awt.Color
 import java.awt.Font
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
+import java.awt.image.RenderedImage
 import java.io.ByteArrayOutputStream
+import java.util.UUID
 import javax.imageio.ImageIO
 import kotlin.math.max
 
@@ -42,7 +41,12 @@ object ImageUtil {
 
     // TODO:
     //  Put the stats in columns when there are a large number of stats
-    suspend fun playerStatsImage(username: String, type: String, stats: List<Named<FormattedStat>>): BufferedImage {
+    suspend fun playerStatsImage(
+        username: String,
+        uuid: UUID,
+        type: String,
+        stats: List<Named<FormattedStat>>
+    ): BufferedImage {
         val statCount = max(stats.size, 5)
         val scoreFontSize = 180.0F / statCount
         val titleFontSize = scoreFontSize * 1.33F
@@ -70,7 +74,7 @@ object ImageUtil {
         }
         val scoresHeight = statCount * (scoreHeight * 2) + (statCount - 1) * padding
 
-        val response = CasualBot.httpClient.get(EmbedUtil.getPlayerBody(username, scoresHeight)) {
+        val response = CasualBot.httpClient.get(EmbedUtil.getPlayerBody(uuid, scoresHeight)) {
             headers {
                 set(HttpHeaders.UserAgent, "CasualBot/1.0")
             }
@@ -131,7 +135,7 @@ object ImageUtil {
         return image
     }
 
-    fun scoreboardImage(title: String, stats: List<ResolvedPlayerStat>): BufferedImage {
+    fun scoreboardImage(title: String, stats: List<Named<FormattedStat>>): BufferedImage {
         val titleFontSize = 40.0F
         val scoreFontSize = 30.0F
 
@@ -148,7 +152,7 @@ object ImageUtil {
         val scoreHeight = (scoreFontMetrics.height * 0.8).toInt()
 
         val namesMaxWidth = stats.maxOf { scoreFontMetrics.stringWidth(it.name) }
-        val valuesMaxWidth = stats.maxOf { scoreFontMetrics.stringWidth(it.stat.formatted()) }
+        val valuesMaxWidth = stats.maxOf { scoreFontMetrics.stringWidth(it.value.formatted()) }
 
         val padding = (0.4 * titleFontSize).toInt()
         val thirdPadding = padding / 3
@@ -189,7 +193,7 @@ object ImageUtil {
             graphics.color = TEXT_COLOR
             graphics.drawString(resolved.name, padding, yPos)
             graphics.color = SCORE_COLOR
-            val stat = resolved.stat.formatted()
+            val stat = resolved.value.formatted()
             graphics.drawString(stat, totalWidth - padding - scoreFontMetrics.stringWidth(stat), yPos)
             yPos += scoreHeight
         }
@@ -254,5 +258,12 @@ object ImageUtil {
         val output = ByteArrayOutputStream()
         ImageIO.write(image, "png", output)
         return FileUpload.fromData(output.toByteArray(), imageName)
+    }
+
+    fun RenderedImage.toFileUpload(name: String): FileUpload {
+        ByteArrayOutputStream().use {
+            ImageIO.write(this, name.substringAfterLast('.'), it)
+            return FileUpload.fromData(it.toByteArray(), name)
+        }
     }
 }

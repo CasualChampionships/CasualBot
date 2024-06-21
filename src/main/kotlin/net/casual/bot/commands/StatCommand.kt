@@ -10,6 +10,7 @@ import net.casual.bot.commands.stats.MinigameStatExpressions
 import net.casual.bot.util.CommandUtils
 import net.casual.bot.util.EmbedUtil
 import net.casual.bot.util.ImageUtil
+import net.casual.bot.util.ImageUtil.toFileUpload
 import net.casual.bot.util.StringUtil.capitalise
 import net.casual.bot.util.StringUtil.capitaliseAll
 import net.casual.bot.util.impl.LoadingMessage
@@ -25,11 +26,8 @@ import net.casual.util.Named
 import net.casual.util.sum
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
-import net.dv8tion.jda.api.utils.FileUpload
 import org.jetbrains.exposed.sql.*
-import java.io.ByteArrayOutputStream
 import java.util.*
-import javax.imageio.ImageIO
 
 object StatCommand: Command {
     override val name = "stat"
@@ -104,12 +102,9 @@ object StatCommand: Command {
             return
         }
 
-        val image = ImageUtil.playerStatsImage(profile.name, minigame.capitalise(), stats)
-        ByteArrayOutputStream().use { stream ->
-            ImageIO.write(image, "png", stream)
-            val file = FileUpload.fromData(stream.toByteArray(), "stats.png")
-            loading.replace(attachments = listOf(file)).queue()
-        }
+        val image = ImageUtil.playerStatsImage(profile.name, profile.id, minigame.capitalise(), stats)
+        val file = image.toFileUpload("stats.png")
+        loading.replace(attachments = listOf(file)).queue()
     }
 
     private fun getStats(uuid: UUID, event: String?, expressions: MinigameStatExpressions): List<Named<FormattedStat>>? {

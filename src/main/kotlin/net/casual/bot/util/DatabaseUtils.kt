@@ -6,8 +6,8 @@ import me.senseiwells.mojank.CachedMojank
 import net.casual.database.CasualDatabase
 import net.casual.database.DiscordPlayer
 import net.casual.stat.FormattedStat
-import net.casual.stat.ResolvedPlayerStat
 import net.casual.stat.UnresolvedPlayerStat
+import net.casual.util.Named
 import java.util.*
 
 object DatabaseUtils {
@@ -51,12 +51,12 @@ object DatabaseUtils {
     suspend fun <T: Any> CasualDatabase.resolveScoreboard(
         scoreboard: List<UnresolvedPlayerStat<out T>>,
         mapper: (T) -> FormattedStat = FormattedStat.Companion::of
-    ): List<ResolvedPlayerStat> = coroutineScope {
+    ): List<Named<FormattedStat>> = coroutineScope {
         scoreboard.map { (uuid, stat) ->
             async { getOrCreateDiscordPlayer(uuid) } to mapper(stat)
         }.mapNotNull { (deferred, stat) ->
             val player = deferred.await() ?: return@mapNotNull null
-            ResolvedPlayerStat(player.id.value, player.name, stat)
+            Named(player.name, stat)
         }
     }
 }

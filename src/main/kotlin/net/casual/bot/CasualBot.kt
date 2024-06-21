@@ -10,29 +10,25 @@ import dev.minn.jda.ktx.messages.MessageCreate
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.util.*
-import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.runBlocking
 import net.casual.bot.commands.ReloadCommand
 import net.casual.bot.commands.ScoreboardCommand
 import net.casual.bot.commands.StatCommand
 import net.casual.bot.commands.TeamCommand
 import net.casual.bot.config.Config
 import net.casual.bot.util.CollectionUtils.concat
-import net.casual.bot.util.DatabaseUtils.resolveScoreboard
 import net.casual.bot.util.EmbedUtil
 import net.casual.bot.util.ImageUtil
+import net.casual.bot.util.ImageUtil.toFileUpload
 import net.casual.bot.util.MessageUtil
 import net.casual.bot.util.MessageUtil.loading
 import net.casual.database.CasualDatabase
-import net.casual.database.stats.UHCMinigameStats
-import net.casual.util.sum
+import net.casual.database.DiscordTeam
+import net.casual.database.DiscordTeams
+import net.casual.stat.FormattedStat
+import net.casual.util.Named
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -40,17 +36,14 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.events.session.ShutdownEvent
 import net.dv8tion.jda.api.requests.GatewayIntent
-import net.dv8tion.jda.api.utils.FileUpload
+import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import org.jetbrains.exposed.sql.DatabaseConfig
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlLogger
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.StatementContext
 import org.jetbrains.exposed.sql.statements.expandArgs
-import java.io.ByteArrayOutputStream
-import java.io.FileOutputStream
 import java.net.SocketTimeoutException
-import java.net.URL
-import javax.imageio.ImageIO
 
 object CasualBot: CoroutineEventListener {
     val logger = KotlinLogging.logger("CasualBot")
@@ -110,17 +103,7 @@ object CasualBot: CoroutineEventListener {
             MessageUtil.editLastMessages(jda, channels.rules, rules)
         }
 
-        val wins = database.resolveScoreboard(database.transaction {
-            UHCMinigameStats.lifetimeScoreboard(UHCMinigameStats.won.sum())
-        })
-        if (wins.isNotEmpty()) {
-            val image = ImageUtil.scoreboardImage("UHC Wins", wins)
-            val file = ByteArrayOutputStream().use {
-                ImageIO.write(image, "png", it)
-                FileUpload.fromData(it.toByteArray(), "scoreboard.png")
-            }
-            MessageUtil.editLastMessages(jda, channels.wins, MessageCreate(files = listOf(file)))
-        }
+        MessageUtil.editLastMessages(jda, channels.wins, createTeamWinsMessage())
     }
 
     override suspend fun onEvent(event: GenericEvent) {
@@ -163,7 +146,7 @@ object CasualBot: CoroutineEventListener {
         } catch (e: Exception) {
             val message =  when (e) {
                 is SocketTimeoutException -> "Error occured while running command, is the database down? Check logs..."
-                else -> "Error occurred while running command, check logs for more info..."
+                else -> "Error occurred while running command, try the command again, otherwise please ping an admin"
             }
             loading.replace(EmbedUtil.somethingWentWrongEmbed(message)).queue()
             logger.error(e) { "An error occurred while running the command ${event.name}" }
@@ -189,5 +172,16 @@ object CasualBot: CoroutineEventListener {
         })
         database.initialize()
         return database
+    }
+
+    private fun createTeamWinsMessage(): MessageCreateData {
+        val teams = database.transaction {
+            DiscordTeam.all()
+                .orderBy(DiscordTeams.wins to SortOrder.DESC, DiscordTeams.name to SortOrder.ASC)
+                .map { Named(it.name, FormattedStat.of(it.wins)) }
+        }
+        val image = ImageUtil.scoreboardImage("UHC Team Wins", teams)
+        val file = image.toFileUpload("uhc_team_wins.png")
+        return MessageCreate(files = listOf(file))
     }
 }

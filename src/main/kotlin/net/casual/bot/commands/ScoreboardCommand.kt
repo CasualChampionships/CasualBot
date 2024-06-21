@@ -10,6 +10,7 @@ import net.casual.bot.commands.stats.MinigameStatExpressions
 import net.casual.bot.util.DatabaseUtils.resolveScoreboard
 import net.casual.bot.util.EmbedUtil
 import net.casual.bot.util.ImageUtil
+import net.casual.bot.util.ImageUtil.toFileUpload
 import net.casual.bot.util.StringUtil.capitalise
 import net.casual.bot.util.StringUtil.capitaliseAll
 import net.casual.bot.util.impl.LoadingMessage
@@ -22,10 +23,16 @@ import net.casual.database.stats.UHCMinigameStats
 import net.casual.util.sum
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
-import net.dv8tion.jda.api.utils.FileUpload
-import org.jetbrains.exposed.sql.*
-import java.io.ByteArrayOutputStream
-import javax.imageio.ImageIO
+import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.max
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.sum
+import kotlin.collections.HashMap
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.iterator
+import kotlin.collections.listOf
+import kotlin.collections.set
 
 object ScoreboardCommand: Command {
     override val name = "scoreboard"
@@ -137,10 +144,7 @@ object ScoreboardCommand: Command {
         val formatted = CasualBot.database.resolveScoreboard(scoreboard)
         val title = "${minigame.capitalise()}: ${stat.capitaliseAll("_")}"
         val image = ImageUtil.scoreboardImage(title, formatted)
-        ByteArrayOutputStream().use { stream ->
-            ImageIO.write(image, "png", stream)
-            val file = FileUpload.fromData(stream.toByteArray(), "stats.png")
-            loading.replace(attachments = listOf(file)).queue()
-        }
+        val file = image.toFileUpload("stats.png")
+        loading.replace(attachments = listOf(file)).queue()
     }
 }

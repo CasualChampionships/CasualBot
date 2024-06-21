@@ -6,6 +6,8 @@ import net.casual.database.DiscordPlayer
 import net.casual.database.DiscordTeam
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
+import java.util.Comparator
+import java.util.UUID
 
 // TODO: Redo some of these embeds
 object EmbedUtil {
@@ -13,8 +15,8 @@ object EmbedUtil {
         return "https://visage.surgeplay.com/bust/${player.id}"
     }
 
-    fun getPlayerBody(username: String, size: Int): String {
-        return "https://visage.surgeplay.com/full/$size/${username}"
+    fun getPlayerBody(uuid: UUID, size: Int): String {
+        return "https://visage.surgeplay.com/full/$size/${uuid}"
     }
 
     fun playerTakenEmbed(player: DiscordPlayer, team: DiscordTeam): MessageEmbed {
@@ -98,7 +100,7 @@ object EmbedUtil {
 
     private fun currentMembers(members: DiscordTeam): String {
         val players = CasualBot.database.transaction {
-            members.players.toList()
+            members.players.sortedWith(Comparator.comparing { it.name })
         }
         if (players.isEmpty()) {
             return "**No Members**"
