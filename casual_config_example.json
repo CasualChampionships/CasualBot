@@ -18,229 +18,141 @@
   "embeds": [
     {
       "name": "info",
-      "title": "UHC Info :book:",
-      "accent": 65372,
-      "fields": [
+      "images": [
+        "https://imgur.com/7hAMHkO.png"
+      ],
+      "embeds": [
         {
-          "title": "Gameplay",
-          "description": [
-            "The world border will begin with a size of 6000x6000 blocks (centered on 0,0) and your team will be randomly placed in the map when the game starts.\n",
-            "There will be a 10 minute grace period where PVP is disabled. After this is over the world border will begin to shrink!\n",
-            "The world border will shrink to a size of 20x20 automatically. If there are still players remaining after 5 minutes",
-            "of reaching this point all players will receive a glowing effect. If the game continues to drag out further the world border will be shrunk further.\n",
-            "You will be able to **break** and **place** blocks **outside** the world border. However as a result of this modification",
-            "when you are outside of the world border it will be appear to be flipped (so your client believes you are still inside).\n",
-            "To know which direction you must go to exit the border there will be text across your screen or alternatively an arrow will be",
-            "rendered below your feet in the direction you should run.\n"
-          ]
+          "title": "World Border Info",
+          "description": "The world border will begin with a size of 6128 x 6128 blocks, centered on 0,0. The world border will shrink in 6 stages. When outside of the world border, you **__will be able__** to break and place blocks. To know which direction you must go in order to exit the border, there will be text across your screen, and an arrow will be rendered below your feet in the direction you should run.",
+          "color": 16730955
         },
         {
-          "title": "Features",
-          "description": [
-            "Other useful features that are a part of UHC:\n",
-            "- Players drop player heads on death, these can be \u0027eaten\u0027 for some regeneration.\n",
-            "- Surrounding the player heads with gold ingots in a crafting table grants golden heads with even better effects!\n",
-            "- Apples have a increased drop rate from oak and dark oak leaves.\n",
-            "- Regular bows have a 1 second cool down after firing.\n",
-            "- Your teammates will glow during the game, you can toggle this with the `/teamglow` command\n",
-            "- Night vision is toggleable for all players with the `/fullbright` command.\n",
-            "- You can message your teammates your co-ordinates using the `/pos` command.\n",
-            "- You can toggle your co-ordinate and world border distance overlay (above your hotbar) with the `/coords` command.\n",
-            "- When in spectator you can use the `/s \u003cplayer\u003e` command to teleport to other players.\n",
-            "- Once the UHC has started if you type in chat you will automatically send it to your team chat.\n",
-            "- Prefix your message with `!` to talk in global chat after UHC has started.\n"
-          ]
+          "title": "World Border Stages",
+          "description": "* Stage 1:  6128 x 6128 blocks | Waits for the grace period to end before moving.\n* Stage 2: 3064 x 306 blocks | Waits 10 minutes before moving again.\n* Stage 3: 1532 x 1532 blocks | Waits 5 minutes before moving again.\n* Stage 4: 510 x 510 blocks | Waits 3 minutes before moving again.\n* Stage 5: 102 x 102 blocks | Waits 1 minute before moving again.\n* Stage 6: 20 x 20 | Final border size.\n\nThe default time for border completion will be **__2 hours__**.\nThe size and speed of the nether world border is 1/8th of the overworld.\nThe end world border will always be big enough to fight the dragon.",
+          "color": 16745581
+        },
+        {
+          "title": "Grace Period",
+          "description": "By default, the grace period will last **__10 minutes__**. During this time, you will not be able to attack other players, but you **__will be able to__** take environmental damage.",
+          "color": 16104310
+        },
+        {
+          "title": "End of Game Glowing",
+          "description": "Once the border reaches its final size, a two-minute countdown will begin. After the countdown finishes, all remaining players will receive the glowing effect. Additionally, after the two-minute countdown, a nether portal will be placed in both the overworld and nether.",
+          "color": 16770429
+        },
+        {
+          "title": "Player Heads",
+          "description": "Players will **__always__** drop their heads on death. Regardless of the cause of death. If you kill a player their head will automatically go into your inventory if there is space. These heads **__can be eaten__** for some regeneration. Surrounding the player heads with gold ingots in a crafting table will give you a golden head, which give even better effects when eaten.",
+          "color": 9961346
+        },
+        {
+          "title": "Gameplay Changes",
+          "description": "* Full bright will be given automatically to all players.\n* Apples have an increased drop rate from oak and dark oak leaves.\n* Bows have a 1-second cooldown after firing. \n* Level 2 potions can't be brewed.\n* Most passive mobs will not have AI. Useful ones such as horses, villagers, dogs, and dolphins still have theirs. \n* Leaving the nether will give you a decent head start and **__never__** put you outside of the overworld world border.\n* The server uses custom resource packs in order to make everything look cool.",
+          "color": 5832620
+        },
+        {
+          "title": "Custom Commands",
+          "description": "* `/uhc fullbright` | Toggles full bright. Enabled by default.\n* `/uhc teamglow` | Toggles your teammates glowing. Enabled by default. \n* `/uhc pos` | Sends a message of your coordinates to your teammates.\n* `/chat <team|global|spectator>` | Toggle where your default chats are sent. \n - By default, you will be in your team chat during UHC.\n - Prefix your message with `!` to send single messages in global chat.\n* `/s <player>` |  Can be used by spectators to teleport to a certain player. Not specifying a player opens a custom GUI for teleporting.",
+          "color": 5881087
         },
         {
           "title": "Teams",
-          "description": [
-            "For main events, teams will always consist of 5 people.\n",
-            "This does **not** mean you need a full team to participate in the events.",
-            "If you do not have a full team you are welcome to join another team for that event.\n",
-            "To be able manage your teams you must use the Discord bot:\n\n",
-            "``` /team add \u003cserver\u003e \u003cusername\u003e\n",
-            "/team remove \u003cserver\u003e \u003cusername\u003e\n",
-            "/team info \u003cserver\u003e```\n\n",
-            "All the information from the discord bot is **automatically** transferred to the Minecraft server to create the teams",
-            "so if you want to play you must add yourself to your team on Discord.\n",
-            "If you are late to the party you can message Sensei on Discord and I will be able to add you into the game.\n",
-            "More info!!!!"
-          ]
+          "description": "For main events, teams will always consist of **__5 players__**. This **__does not__** mean that you need a full team in order to participate in the events. If you do not have a full team, you are still allowed to play, or you are welcome to join another team that also doesn't have all 5 players.",
+          "color": 7382015
+        },
+        {
+          "title": "Discord Bot",
+          "description": "To manage your team, you **__must__** use the Discord bot. Below are the commands.\n\n```\n /team add <server> <username>\n /team remove <server> <username>\n /team info <server>\n```\n\nThis information is directly transferred to the Minecraft server, so be sure it is always up-to-date. If you make changes while the server is already online, be sure to ping Sensei or Santa to make sure the server is updated.",
+          "color": 11181055
+        },
+        {
+          "title": "Spectators",
+          "description": "Members of your server who are not playing are welcome to spectate the game as long as they are following the rules for spectators. Spectators must also use the Discord bot in order to be allowed on the Minecraft server. There will be a `Spectators` option when trying to add yourself to a team.",
+          "color": 16753663
         }
       ]
     },
     {
       "name": "faq",
-      "title": "Frequently Asked Questions :grey_question:",
-      "accent": 65372,
-      "fields": [
+      "images": [
+        "https://i.imgur.com/XyYbKht.png"
+      ],
+      "embeds": [
         {
-          "title": ":question: What is Casual UHC :question:",
-          "description": [
-            "Casual UHC or sometimes referred to as TMC UHC is an event where",
-            "different Technical Minecraft Server\u0027s duel it out in a world.\n",
-            "UHC is a pvp game where players in their teams are spread across a world",
-            "with a shrinking world border. The catch is that you do not naturally regenerate health."
-          ]
-        },
-        {
-          "title": ":question: What timezone is the UHC announcement in :question:",
-          "description": [
-            "The time in announcements is in your local time, the time is specifically for YOU!"
-          ]
-        },
-        {
-          "title": ":question: What is allowed :question:",
-          "description": [
-            "Read the rules! \u003c#744168942842413099\u003e."
-          ]
-        },
-        {
-          "title": ":question: How long are the UHCs :question:",
-          "description": [
-            "Usually around 2-3 hours."
-          ]
-        },
-        {
-          "title": ":question: Can I stream the event :question:",
-          "description": [
-            "Yes! You are welcome to also share your stream in \u003c#763142666292559882\u003e."
-          ]
-        },
-        {
-          "title": ":question: I can't make the event when it starts, can I join mid-game? :question:",
-          "description": [
-            "Yes, just message Sensei and he\u0027ll add you (you still need to add yourself to the team Discord bot, more about that in the info section)."
-          ]
-        },
-        {
-          "title": ":question: Can I spectate the game? :question:",
-          "description": [
-            "Yes, if you do not add yourself to a team you\u0027ll just be put in spectator mode and you can watch the game!\n",
-            "Be sure to read the rules about spectating in \u003c#744168942842413099\u003e."
-          ]
-        },
-        {
-          "title": ":question: Can xyz server be added to the roster :question:",
-          "description": [
-            "There\u0027s a queue for servers wanting to join UHC.\n",
-            "Please get xyz\u0027s server admin to contact Sensei."
-          ]
-        },
-        {
-          "title": ":question: When is the next UHC :question:",
-          "description": [
-            "Whenever Sensei finds time."
-          ]
-        },
-        {
-          "title": ":question: UHC in Minecraft 1.8 :question:",
-          "description": [
-            "Sorry, this will probably not happen."
-          ]
-        }
-      ]
-    },
-    {
-      "name": "suggestions",
-      "title": "How to Use Suggestions",
-      "accent": 6578592,
-      "fields": [
-        {
-          "title": "Type Your Suggestion",
-          "description": [
-            "A thread will automatically be created where you can put more details about your suggestion."
-          ]
-        },
-        {
-          "title": "Use Reactions",
-          "description": [
-            "Reactions are generally a good way to gauge whether people like the idea of a suggestion.",
-            "Please don\u0027t go over the top with unnecessary reactions, usually :thumbsup: and :thumbsdown: are good enough."
-          ]
-        },
-        {
-          "title": "Feedback",
-          "description": [
-            "Feel free to talk in the thread about the suggestion, but please keep discussions civil."
-          ]
+          "title": "__Frequently Asked Questions__",
+          "description": "**Q: What time zone is the announcement in?**\n\n**A:** The time is displayed dynamically in your local time zone.\n\n\n**Q: What is client side features can be used?**\n\n**A:** Read the rules. #📃│uhc-rules\n\n\n**Q: How long does a UHC last?**\n\n**A:** Usually around 2 to 2.5 hours.\n\n\n**Q: Can I stream the event?**\n\n**A:** Yes! You are can also share your stream in #📡│share-content\n\n\n**Q: I'm going to be late and miss the start of the event, can I still join?**\n\n**A:** Yes, but there are rules regarding that. Check out #📃│uhc-rules\n\n\n**Q: I need to leave mid-way through the game, can someone sub in for me?**\n\n**A:** No. This will give an unfair advantage towards the other teams.\n\n\n**Q: Help! Why do I see ▯ symbols in game?**\n\n**A:** Your resource packs did not load. Try relogging and if not ping Sensei.\n\n\n**Q:  Can I spectate the game?**\n\n**A:** Yes. Be sure to add yourself to the `Spectators` team using the discord bot and that you have read the rules regarding spectators. \n\n\n**Q: Can xyz server be added to the roster?**\n\n**A:** Sensei and Santa have a list for servers that want to join. Tell xyz's server admin to contact Santa.\n\n\n**Q: When is the next UHC / How often do UHC's happen?**\n\n**A:** The goal is to have one UHC every month. More details will be announced once Sensei and Santa figure out the date. \n\n\n**Q: What version will UHC be in?**\n\n**A:** We will always try to stay in the latest stable version. The version will  also be announced when the event details are released.",
+          "color": 11181055
         }
       ]
     },
     {
       "name": "rules",
-      "title": "UHC Rules!",
-      "accent": 13512015,
-      "fields": [
+      "images": [
+        "https://imgur.com/Hbveezq.png"
+      ],
+      "embeds": [
         {
-          "title": ":scroll: Mods",
-          "description": [
-            "Please refrain from using mods as much as possible, it makes it fairer for everyone!\n",
-            "Night vision is provided in game, alternatively you may use gamma override.\n",
-            "You may use resource packs that do not give you an advantage.\n",
-            "You may **not** use any features from mods/hacks that change the behaviour of the client to",
-            "give you an advantage. This includes the following:\n",
-            "- **Disabling fog**, this is not possible in Vanilla.\n",
-            "- **Placement tweaks**, placing blocks where you wouldn\u0027t be able to in Vanilla (e.g. flexibleBlockPlacement).\n",
-            "- **HUD mods**, providing you with information that you would otherwise not know, (e.g. displaying other player\u0027s health).\n",
-            "- **Minimap mods**, minimaps are not available in Vanilla.\n",
-            "You may use mods that display information that you would otherwise already know (e.g. enabling co-ords in MiniHud).\n\n",
-            "You may use any tools that are provided in vanilla, (e.g. F3 debug tools).\n",
-            "If you are **unsure** about any mod, please message Sensei."
-          ]
+          "title": "Mods and Clients",
+          "description": "The use of mods, custom clients, and texture packs should be kept to a minimum in order to make the game fair for everyone. Any features that change the vanilla behavior of the client are not allowed.",
+          "color": 16730955
         },
         {
-          "title": ":scroll: Exploits",
-          "description": [
-            "Use of any exploits are **strictly prohibited**.\n",
-            "Exploits are the use of a unintended bug to gain an advantage, this includes:\n",
-            "- **X-ray glitches**\n",
-            "- **Invincibility glitches**\n",
-            "- **Duplication glitches**, TNT is an exception to this.\n"
-          ]
+          "title": "Banned Mod Features",
+          "description": "* Disabling fog\n* Placement tweaks (e.g. flexibleBlockPlacement)\n* HUD mods (e.g. displaying other players' health)\n* Mini-map mods\n* X-raying and or block highlighting\n(This list may be updated as needed)\n\nYou may use any tools that are provided in vanilla (e.g. F3 debug tools).\nIf you are **__unsure__** about any mod, custom client, or texture pack, please ping Sensei or Santa.",
+          "color": 16745581
         },
         {
-          "title": ":scroll: PVP",
-          "description": [
-            "Some rules are in place to make PVP fair and more enjoyable:\n",
-            "- **No Portal trapping/camping**, no one wants to die leaving or entering the Nether or End, other types of traps are permitted.\n",
-            "- **No Sky Basing**, do not build a base high up in the sky. If you are camping in a structure that is over",
-            "20 blocks from the ground you will be asked to move.\n",
-            "- **No Nether Roof**. Please. Just. Don\u0027t.\n",
-            "- **No Instant Health Potions**, these are too broken.\n",
-            "- **No Level 2 Potions**, you cannot brew any level 2 potions.\n",
-            "- **No Cross Teaming**, this creates an unfair advantage.\n"
-          ]
+          "title": "Exploits",
+          "description": "Exploits are unintended bugs that can give unfair advantages, and the use of any is **__strictly prohibited__** . Some examples are X-ray glitches, invincibility glitches, and duplication glitches. The **__ONLY__** exception to this is TNT duplication.",
+          "color": 16104310
         },
         {
-          "title": ":scroll: Voice Chat",
-          "description": [
-            "Please be respectful of everyone in a voice chat.\n",
-            "And please be mindful that others may be streaming so avoid using",
-            "profanity in public voice chats and remain family friendly!"
-          ]
+          "title": "PVP",
+          "description": "* No Portal Trapping or Portal Camping\n* No Nether Roof\n* No Instant Health Potions Or Arrows\n* No Level 2 Potions\n* No Cross Teaming\n* No Sky Basing\n* No Hiding Outside of the World Border",
+          "color": 16770429
         },
         {
-          "title": ":scroll: Spectators",
-          "description": [
-            "Preferably spectators should remain in \u003c#787370935011246110\u003e,",
-            "however it is understandable that you may want to be in voice with your team.\n",
-            "Please be mindful that you **do not share information** that your team would not",
-            "otherwise know. This also applies to the in game chat."
-          ]
+          "title": "PVP - Continued",
+          "description": "If you are camping in a structure that is over 20 blocks from the ground, you will be asked to move. If you are outside of the world border at the end of the game, when it has stopped moving, you will be asked to re-enter the border. Instant health potions and arrows will be removed from loot tables. Level two potions also cannot be brewed.",
+          "color": 9961346
         },
         {
-          "title": ":exclamation: Gentleman\u0027s rules",
-          "description": [
-            "These rules do not cover absolutely everything, please do not try",
-            "to find loopholes to work around the rules."
-          ]
+          "title": "Teammates",
+          "description": "If one or more of your teammates cannot make it on time for the start of an event, we will only allow them to participate if they show up within **__15 minutes__** of the game starting. Any later will cause an unfair advantage for the other teams. Also, if a teammate needs to leave during the event, another person will **__not__** be allowed to replace them.",
+          "color": 5832620
         },
         {
-          "title": ":exclamation: Questions",
-          "description": [
-            "If you are unsure about anything please ping \u003c@546239692048302091\u003e."
-          ]
+          "title": "Chats",
+          "description": "Please be respectful of everyone in both voice chat and in-game chat. Remember that others could be streaming, so always remain family-friendly and avoid using profanity in public voice chats and in-game chats.",
+          "color": 5881087
+        },
+        {
+          "title": "Spectators",
+          "description": "Spectators should be mindful that they are **__not sharing ANY information__** with current players that they do not already know. This applies to both voice chats and in-game chats. Preferably, spectators should remain in <#787370935011246110>; however, it is understandable that they may want to be in voice chat with their team.",
+          "color": 7382015
+        },
+        {
+          "title": "Gentleman's Rules",
+          "description": "These rules do not cover absolutely everything. **__Do not__** try to find loopholes to work around the rules.",
+          "color": 11181055
+        },
+        {
+          "title": "Questions",
+          "description": "If you are ever unsure about anything please ping Sensei or Santa.",
+          "color": 16753663
+        }
+      ]
+    },
+    {
+      "name": "suggestions",
+      "title": "",
+      "embeds": [
+        {
+          "title": "How To Use Suggestions",
+          "description": "**Type Your Suggestion**\nA thread will automatically be created where you can put more details about your suggestion.\n\n**Use Reactions**\nReactions are generally a good way to gauge whether people like the idea of a suggestion. Please don't go over the top with unnecessary reactions, usually :thumbsup: and :thumbsdown: are good enough.\n\n**Feedback**\nFeel free to talk in the thread about the suggestion, but please keep discussions civil.",
+          "color": 11181055
         }
       ]
     }

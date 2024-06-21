@@ -1,6 +1,10 @@
 package net.casual.bot.config
 
-import dev.minn.jda.ktx.messages.EmbedBuilder
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.utils.io.jvm.javaio.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -10,9 +14,17 @@ import kotlinx.serialization.json.decodeFromStream
 import kotlinx.serialization.json.encodeToStream
 import net.casual.bot.CasualBot
 import net.casual.bot.util.EmbedUtil
+import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.utils.FileUpload
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
+import net.dv8tion.jda.api.utils.messages.MessageCreateData
+import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
+import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.io.IOException
 import java.nio.file.Path
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.io.path.*
 
 @Serializable
@@ -32,6 +44,55 @@ data class EmbedChannels(
 )
 
 @Serializable
+data class Embeds(
+    val name: String,
+    val title: String = "",
+    val images: List<String> = listOf(),
+    val embeds: List<Embed> = listOf()
+) {
+    @Transient
+    private val files = ArrayList<Deferred<FileUpload>>()
+
+    init {
+        for (image in images) {
+            files.add(CasualBot.coroutineScope.async {
+                FileUpload.fromData(
+                    CasualBot.httpClient.get(image).bodyAsChannel().toInputStream(),
+                    image.substringAfterLast('/')
+                )
+            })
+        }
+    }
+
+    fun asMessageCreateData(): List<MessageCreateData> {
+        val data = ArrayList<MessageCreateData>()
+        runBlocking {
+            val msg = MessageCreateBuilder()
+                .setContent(title)
+                .setFiles(files.awaitAll())
+                .setEmbeds(embeds.map(Embed::toMessageEmbed)).build()
+            data.add(msg)
+        }
+        return data
+    }
+}
+
+@Serializable
+data class Embed(
+    val title: String,
+    val description: String,
+    val color: Int,
+) {
+    fun toMessageEmbed(): MessageEmbed {
+        return EmbedBuilder()
+            .setTitle(title)
+            .setDescription(description)
+            .setColor(color)
+            .build()
+    }
+}
+
+@Serializable
 @OptIn(ExperimentalSerializationApi::class)
 data class Config(
     val dev: Boolean = true,
@@ -40,14 +101,13 @@ data class Config(
     val databaseLogin: DatabaseLogin = DatabaseLogin(),
     val guildId: Long = 0L,
     val channelIds: EmbedChannels = EmbedChannels(),
-    private val embeds: List<Embed> = listOf(),
+    private val embeds: List<Embeds> = listOf(),
 ) {
     @Transient
-    private val embedsByName = this.embeds.associateBy { it.name }
+    private val embedsByName = embeds.associateBy { it.name }
 
-    fun embedOrDefault(name: String): MessageEmbed {
-        val embed = embedsByName[name] ?: return EmbedUtil.somethingWentWrongEmbed("Embed not found!")
-        return embed.toMessageEmbed()
+    fun embedsByName(name: String): Embeds? {
+        return embedsByName[name]
     }
 
     companion object {
@@ -85,36 +145,5 @@ data class Config(
                 CasualBot.logger.error(e) { "Failed to serialize config" }
             }
         }
-    }
-}
-
-@Serializable
-data class Field(
-    val title: String,
-    val description: List<String>
-)
-
-@Serializable
-data class Embed(
-    val name: String,
-    val title: String,
-    val fields: List<Field>,
-    val accent: Int,
-) {
-    fun toMessageEmbed(): MessageEmbed {
-        return EmbedBuilder {
-            title = this@Embed.title
-
-            val iter = fields.iterator()
-            while (iter.hasNext()) {
-                val (title, description) = iter.next()
-                field {
-                    name = title
-                    value = description.joinToString(" ").trimEnd() + if (iter.hasNext()) "\n\n_ _" else ""
-                    inline = false
-                }
-            }
-            color = accent
-        }.build()
     }
 }

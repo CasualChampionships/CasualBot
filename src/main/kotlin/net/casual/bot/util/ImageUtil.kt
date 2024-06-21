@@ -8,6 +8,7 @@ import io.ktor.http.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.casual.bot.CasualBot
 import net.casual.stat.FormattedStat
 import net.casual.stat.ResolvedPlayerStat
 import net.casual.util.Named
@@ -24,7 +25,6 @@ import kotlin.math.max
 object ImageUtil {
     private val MINECRAFT_FONT: Font
     private val ADVANCEMENT_BANNER: BufferedImage
-    private val HTTP_CLIENT = HttpClient(CIO)
 
     private val BORDER_COLOR = Color(0x17191C)
     private val BACKGROUND_COLOR = Color(0x313338)
@@ -70,7 +70,11 @@ object ImageUtil {
         }
         val scoresHeight = statCount * (scoreHeight * 2) + (statCount - 1) * padding
 
-        val response = HTTP_CLIENT.get(EmbedUtil.getPlayerBody(username, scoresHeight))
+        val response = CasualBot.httpClient.get(EmbedUtil.getPlayerBody(username, scoresHeight)) {
+            headers {
+                set(HttpHeaders.UserAgent, "CasualBot/1.0")
+            }
+        }
         var player: BufferedImage? = null
         if (response.status == HttpStatusCode.OK) {
             val body = withContext(Dispatchers.IO) {

@@ -6,12 +6,25 @@ import dev.minn.jda.ktx.interactions.commands.slash
 import dev.minn.jda.ktx.interactions.commands.updateCommands
 import dev.minn.jda.ktx.jdabuilder.intents
 import dev.minn.jda.ktx.jdabuilder.light
+import dev.minn.jda.ktx.messages.MessageCreate
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.util.*
+import io.ktor.utils.io.jvm.javaio.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.runBlocking
 import net.casual.bot.commands.ReloadCommand
 import net.casual.bot.commands.ScoreboardCommand
 import net.casual.bot.commands.StatCommand
 import net.casual.bot.commands.TeamCommand
 import net.casual.bot.config.Config
+import net.casual.bot.util.CollectionUtils.concat
 import net.casual.bot.util.DatabaseUtils.resolveScoreboard
 import net.casual.bot.util.EmbedUtil
 import net.casual.bot.util.ImageUtil
@@ -34,11 +47,16 @@ import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.StatementContext
 import org.jetbrains.exposed.sql.statements.expandArgs
 import java.io.ByteArrayOutputStream
+import java.io.FileOutputStream
 import java.net.SocketTimeoutException
+import java.net.URL
 import javax.imageio.ImageIO
 
 object CasualBot: CoroutineEventListener {
     val logger = KotlinLogging.logger("CasualBot")
+    val httpClient = HttpClient(CIO)
+    val coroutineScope = CoroutineScope(Dispatchers.Default + Job())
+
     var config = Config.read()
         private set
 
@@ -48,6 +66,7 @@ object CasualBot: CoroutineEventListener {
         intents += GatewayIntent.MESSAGE_CONTENT
         addEventListeners(this@CasualBot)
     }
+
 
     val guild by lazy { jda.getGuildById(config.guildId) }
 
@@ -78,32 +97,30 @@ object CasualBot: CoroutineEventListener {
     }
 
     suspend fun reloadEmbeds() {
-        val info = config.embedOrDefault("info")
-        val faq = config.embedOrDefault("faq")
-        val rules = config.embedOrDefault("rules")
-
         val channels = config.channelIds
 
-        val channel = jda.getTextChannelById(channels.wins)
-        if (channel != null) {
-            // FIXME:
-            val wins = database.resolveScoreboard(database.transaction {
-                UHCMinigameStats.lifetimeScoreboard(UHCMinigameStats.won.sum())
-            })
-            if (wins.isNotEmpty()) {
-                val image = ImageUtil.scoreboardImage("UHC Wins", wins)
-                ByteArrayOutputStream().use {
-                    ImageIO.write(image, "png", it)
-                    channel.editMessageAttachmentsById(
-                        channel.latestMessageIdLong,
-                        FileUpload.fromData(it.toByteArray(), "scoreboard.png")
-                    )
-                }
-            }
+        val info = config.embedsByName("info")?.asMessageCreateData()
+        val faq = config.embedsByName("faq")?.asMessageCreateData()
+        if (info != null && faq != null) {
+            MessageUtil.editLastMessages(jda, channels.info, info.concat(faq))
         }
 
-        MessageUtil.replaceFirstMessages(jda, channels.rules, listOf(""), listOf(rules))
-        MessageUtil.replaceFirstMessages(jda, channels.info, listOf(""), listOf(info, faq))
+        val rules = config.embedsByName("rules")?.asMessageCreateData()
+        if (rules != null) {
+            MessageUtil.editLastMessages(jda, channels.rules, rules)
+        }
+
+        val wins = database.resolveScoreboard(database.transaction {
+            UHCMinigameStats.lifetimeScoreboard(UHCMinigameStats.won.sum())
+        })
+        if (wins.isNotEmpty()) {
+            val image = ImageUtil.scoreboardImage("UHC Wins", wins)
+            val file = ByteArrayOutputStream().use {
+                ImageIO.write(image, "png", it)
+                FileUpload.fromData(it.toByteArray(), "scoreboard.png")
+            }
+            MessageUtil.editLastMessages(jda, channels.wins, MessageCreate(files = listOf(file)))
+        }
     }
 
     override suspend fun onEvent(event: GenericEvent) {
@@ -129,7 +146,12 @@ object CasualBot: CoroutineEventListener {
             message.addReaction(Emoji.fromUnicode("\uD83D\uDC4D")).queue()
             message.addReaction(Emoji.fromUnicode("\uD83D\uDC4E")).queue()
             event.channel.iterableHistory.find { it.author == jda.selfUser }?.delete()?.queue()
-            event.channel.sendMessageEmbeds(config.embedOrDefault("suggestions")).queue()
+            val suggestions = config.embedsByName("suggestions")?.asMessageCreateData()
+            if (suggestions != null) {
+                for (data in suggestions) {
+                    event.channel.sendMessage(data).queue()
+                }
+            }
         }
     }
 
