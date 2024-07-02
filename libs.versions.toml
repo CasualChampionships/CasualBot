@@ -7,17 +7,17 @@ ktor            = "2.3.11"
 klogging        = "5.1.0"
 logback         = "1.4.12"
 mojank          = "1.0.1"
-casual-database = "895c3fa3a264055d41106457886b1299d302eab6"
+casual-database = "71632a257986f4a3918796da1a3d7513560275dd"
 
 [libraries]
-coroutines      = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core"   , version.ref = "coroutines" }
-json            = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "json" }
-jda             = { module = "net.dv8tion:JDA"                                 , version.ref = "jda" }
-jda-ktx         = { module = "club.minnced:jda-ktx"                            , version.ref = "jda-ktx" }
-klogging        = { module = "io.github.oshai:kotlin-logging-jvm"              , version.ref = "klogging" }
-logback         = { module = "ch.qos.logback:logback-classic"                  , version.ref = "logback" }
-mojank          = { module = "com.github.senseiwells:mojank"                   , version.ref = "mojank" }
-casual-database = { module = "com.github.CasualChampionships:casual-database"  , version.ref = "casual-database" }
+coroutines      = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core"                  , version.ref = "coroutines" }
+json            = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json"               , version.ref = "json" }
+jda             = { module = "net.dv8tion:JDA"                                                , version.ref = "jda" }
+jda-ktx         = { module = "club.minnced:jda-ktx"                                           , version.ref = "jda-ktx" }
+klogging        = { module = "io.github.oshai:kotlin-logging-jvm"                             , version.ref = "klogging" }
+logback         = { module = "ch.qos.logback:logback-classic"                                 , version.ref = "logback" }
+mojank          = { module = "com.github.senseiwells:mojank"                                  , version.ref = "mojank" }
+casual-database = { module = "com.github.CasualChampionships.CasualDatabase:casual-database"  , version.ref = "casual-database" }
 
 ktor-cio           = { module = "io.ktor:ktor-client-cio"                , version.ref = "ktor"}
 ktor-core          = { module = "io.ktor:ktor-client-core-jvm"           , version.ref = "ktor"}

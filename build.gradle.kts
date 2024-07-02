@@ -17,7 +17,7 @@ repositories {
     mavenCentral()
     maven("https://jitpack.io/")
     maven("https://repo.fruxz.dev/releases/")
-    mavenLocal()
+    // mavenLocal()
 }
 
 dependencies {
@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.mojank)
 
     implementation(libs.casual.database)
+    // implementation(libs.casual.database)
 
     implementation(libs.ktor.core)
     implementation(libs.ktor.cio)
@@ -43,7 +44,7 @@ dependencies {
 }
 
 tasks.compileKotlin {
-    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.jvmTarget = "21"
 }
 
 tasks.shadowJar {
