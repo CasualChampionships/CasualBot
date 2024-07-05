@@ -3,8 +3,10 @@ package net.casual.bot.config
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.utils.io.jvm.javaio.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.future.asCompletableFuture
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -13,19 +15,16 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import kotlinx.serialization.json.encodeToStream
 import net.casual.bot.CasualBot
-import net.casual.bot.util.EmbedUtil
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.utils.FileUpload
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
-import net.dv8tion.jda.api.utils.messages.MessageEditBuilder
-import net.dv8tion.jda.api.utils.messages.MessageEditData
 import java.io.IOException
 import java.nio.file.Path
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.io.path.*
+import kotlin.io.path.exists
+import kotlin.io.path.inputStream
+import kotlin.io.path.outputStream
 
 @Serializable
 data class DatabaseLogin(
@@ -99,6 +98,7 @@ data class Config(
     val token: String = "",
     val loadingMessage: String = "",
     val databaseLogin: DatabaseLogin = DatabaseLogin(),
+    val minecraftVersion: String = "",
     val guildId: Long = 0L,
     val channelIds: EmbedChannels = EmbedChannels(),
     private val embeds: List<Embeds> = listOf(),
