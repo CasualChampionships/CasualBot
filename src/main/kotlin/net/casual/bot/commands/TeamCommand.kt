@@ -30,7 +30,7 @@ object TeamCommand: Command {
 
         command.subcommand("create", "Creates a new team") {
             option<String>("name", "The team name", true)
-            option<Role>("role", "The team role", true)
+            option<Role>("role", "The team role", false)
             option<TextChannel>("channel", "The team channel", false)
         }
         command.subcommand("delete", "Deletes a team") {
@@ -85,7 +85,7 @@ object TeamCommand: Command {
 
     private suspend fun createTeam(event: GenericCommandInteractionEvent, loading: LoadingMessage) {
         val teamName = event.getOption<String>("name")!!
-        val role = event.getOption<Role>("role")!!
+        val role = event.getOption<Role>("role")
         val channel = event.getOption<TextChannel>("channel")
 
         val team = CasualBot.database.getDiscordTeam(teamName)
@@ -101,7 +101,7 @@ object TeamCommand: Command {
                 logo = null
                 color = MinecraftColor.WHITE
                 wins = 0
-                roleId = role.idLong
+                roleId = role?.idLong
                 channelId = channel?.idLong
             }
         }
@@ -162,9 +162,12 @@ object TeamCommand: Command {
             return
         }
 
-        if (!event.canModifyRole(team.roleId)) {
-            loading.replace(EmbedUtil.noPermission()).queue()
-            return
+        if (!event.isAdministrator()) {
+            val roleId = team.roleId
+            if (roleId == null || !event.canModifyRole(roleId)) {
+                loading.replace(EmbedUtil.noPermission()).queue()
+                return
+            }
         }
 
         CasualBot.database.transaction {
@@ -193,7 +196,8 @@ object TeamCommand: Command {
             return
         }
 
-        if (!event.canModifyRole(team.roleId)) {
+        val roleId = team.roleId
+        if (roleId != null && !event.canModifyRole(roleId)) {
             loading.replace(EmbedUtil.noPermission()).queue()
             return
         }
@@ -225,13 +229,13 @@ object TeamCommand: Command {
             return
         }
 
-        if (!event.canModifyRole(team.roleId)) {
+        val roleId = team.roleId
+        if (roleId != null && !event.canModifyRole(roleId)) {
             loading.replace(EmbedUtil.noPermission()).queue()
             return
         }
 
-
-        if (CasualBot.database.transaction { team.players.count() } >= 5) {
+        if (roleId != null && CasualBot.database.transaction { team.players.count() } >= 5) {
             loading.replace(EmbedUtil.fullTeamEmbed(team)).queue()
             return
         }

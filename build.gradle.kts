@@ -14,10 +14,10 @@ version = "0.0.2"
 application.mainClass.set("net.casual.bot.CasualBot")
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven("https://jitpack.io/")
     maven("https://repo.fruxz.dev/releases/")
-    // mavenLocal()
 }
 
 dependencies {
@@ -35,7 +35,6 @@ dependencies {
     implementation(libs.mojank)
 
     implementation(libs.casual.database)
-    // implementation(libs.casual.database)
 
     implementation(libs.ktor.core)
     implementation(libs.ktor.cio)

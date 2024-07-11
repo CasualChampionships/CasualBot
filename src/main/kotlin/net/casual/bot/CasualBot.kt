@@ -67,7 +67,7 @@ object CasualBot: CoroutineEventListener {
 
     @JvmStatic
     fun main(args: Array<String>) {
-
+        
     }
 
     fun reloadConfig() {
