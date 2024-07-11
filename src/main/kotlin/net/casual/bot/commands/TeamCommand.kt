@@ -66,6 +66,7 @@ object TeamCommand: Command {
     }
 
     override suspend fun execute(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
+        // TODO: Add a check to see if there is an event currently scheduled.
         if (command.subcommandName in admin && !command.isAdministrator()) {
             loading.replace(EmbedUtil.noPermission()).queue()
             return

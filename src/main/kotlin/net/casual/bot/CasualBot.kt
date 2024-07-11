@@ -4,7 +4,6 @@ import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.events.CoroutineEventListener
 import dev.minn.jda.ktx.interactions.commands.slash
 import dev.minn.jda.ktx.interactions.commands.updateCommands
-import dev.minn.jda.ktx.jdabuilder.intents
 import dev.minn.jda.ktx.jdabuilder.light
 import dev.minn.jda.ktx.messages.MessageCreate
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -29,13 +28,18 @@ import net.casual.database.DiscordTeam
 import net.casual.database.DiscordTeams
 import net.casual.stat.FormattedStat
 import net.casual.util.Named
+import net.dv8tion.jda.api.entities.ScheduledEvent
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.GenericEvent
+import net.dv8tion.jda.api.events.guild.scheduledevent.ScheduledEventCreateEvent
+import net.dv8tion.jda.api.events.guild.scheduledevent.update.ScheduledEventUpdateStatusEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.events.session.ShutdownEvent
 import net.dv8tion.jda.api.requests.GatewayIntent
+import net.dv8tion.jda.api.utils.cache.CacheFlag
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.SortOrder
@@ -44,8 +48,10 @@ import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.StatementContext
 import org.jetbrains.exposed.sql.statements.expandArgs
 import java.net.SocketTimeoutException
+import java.time.ZoneId
 
-object CasualBot: CoroutineEventListener {
+
+object CasualBot : CoroutineEventListener {
     val logger = KotlinLogging.logger("CasualBot")
     val httpClient = HttpClient(CIO)
     val coroutineScope = CoroutineScope(Dispatchers.Default + Job())
@@ -56,7 +62,8 @@ object CasualBot: CoroutineEventListener {
     val database = createDatabase()
 
     val jda = light(config.token, enableCoroutines = true) {
-        intents += GatewayIntent.MESSAGE_CONTENT
+        enableIntents(GatewayIntent.MESSAGE_CONTENT, GatewayIntent.SCHEDULED_EVENTS)
+        enableCache(CacheFlag.SCHEDULED_EVENTS)
         addEventListeners(this@CasualBot)
     }
 
@@ -112,6 +119,8 @@ object CasualBot: CoroutineEventListener {
             is MessageReceivedEvent -> onMessageReceived(event)
             is SlashCommandInteractionEvent -> onSlashCommandInteraction(event)
             is ShutdownEvent -> onShutdown()
+            is ScheduledEventCreateEvent -> onScheduledEventCreate(event)
+            is ScheduledEventUpdateStatusEvent -> onScheduledEventUpdateStatus(event)
         }
     }
 
@@ -120,6 +129,35 @@ object CasualBot: CoroutineEventListener {
 
         reloadCommands()
         reloadEmbeds()
+    }
+
+    private suspend fun onScheduledEventCreate(event: ScheduledEventCreateEvent) {
+        val name = event.scheduledEvent.name
+        val time = event.scheduledEvent.startTime.toLocalDateTime()
+        val unix = time.atZone(ZoneId.of("UTC")).toEpochSecond()
+
+        val statusChannelId = config.channelIds.status
+        val embed = MessageCreateBuilder().setContent("@everyone").setEmbeds(EmbedUtil.nextEventEmbed(name, unix)).build()
+
+        MessageUtil.editLastMessages(event.jda, statusChannelId, embed)
+
+        for (team in database.getDiscordTeams()) {
+            val teamChannelId = team.channelId ?: continue
+            val message =
+                "You can now begin creating teams for the ${event.scheduledEvent.name}! Remember you **__do not__** need a full team in order to play. If you have any difficulties or questions feel free to ping Santa or Sensei! "
+            val teamChannel = event.jda.getTextChannelById(teamChannelId) ?: continue
+            teamChannel.sendMessage(message).queue()
+        }
+    }
+
+    private suspend fun onScheduledEventUpdateStatus(event: ScheduledEventUpdateStatusEvent) {
+        val status = event.newStatus
+
+        if (status == ScheduledEvent.Status.COMPLETED) {
+            val channelId = config.channelIds.status
+            val embed = MessageCreateBuilder().setEmbeds(EmbedUtil.noEventScheduledEmbed()).build()
+            MessageUtil.editLastMessages(event.jda, channelId, embed)
+        }
     }
 
     private fun onMessageReceived(event: MessageReceivedEvent) {
@@ -144,8 +182,8 @@ object CasualBot: CoroutineEventListener {
         try {
             command.execute(event, loading)
         } catch (e: Exception) {
-            val message =  when (e) {
-                is SocketTimeoutException -> "Error occured while running command, is the database down? Check logs..."
+            val message = when (e) {
+                is SocketTimeoutException -> "Error occurred while running command, is the database down? Check logs..."
                 else -> "Error occurred while running command, try the command again, otherwise please ping an admin"
             }
             loading.replace(EmbedUtil.somethingWentWrongEmbed(message)).queue()
@@ -164,7 +202,7 @@ object CasualBot: CoroutineEventListener {
     private fun createDatabase(): CasualDatabase {
         val login = config.databaseLogin
         val database = CasualDatabase(login.url, login.username, login.password, DatabaseConfig {
-            sqlLogger = object: SqlLogger {
+            sqlLogger = object : SqlLogger {
                 override fun log(context: StatementContext, transaction: Transaction) {
                     logger.info { context.expandArgs(transaction) }
                 }
@@ -176,8 +214,7 @@ object CasualBot: CoroutineEventListener {
 
     private fun createTeamWinsMessage(): MessageCreateData {
         val teams = database.transaction {
-            DiscordTeam.all()
-                .orderBy(DiscordTeams.wins to SortOrder.DESC, DiscordTeams.name to SortOrder.ASC)
+            DiscordTeam.all().orderBy(DiscordTeams.wins to SortOrder.DESC, DiscordTeams.name to SortOrder.ASC)
                 .map { Named(it.name, FormattedStat.of(it.wins)) }
         }
         val image = ImageUtil.scoreboardImage("UHC Team Wins", teams)
