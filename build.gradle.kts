@@ -1,23 +1,21 @@
 plugins {
-    kotlin("jvm") version "1.9.24"
-    kotlin("plugin.serialization") version "1.9.24"
-
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.shadow)
 
     `maven-publish`
     application
 }
 
 group = "net.casual"
-version = "0.0.2"
+version = "0.1.0"
 
 application.mainClass.set("net.casual.bot.CasualBot")
 
 repositories {
-    mavenLocal()
     mavenCentral()
+    maven("https://maven.supersanta.me/snapshots")
     maven("https://jitpack.io/")
-    maven("https://repo.fruxz.dev/releases/")
 }
 
 dependencies {
@@ -40,10 +38,6 @@ dependencies {
     implementation(libs.ktor.cio)
     implementation(libs.ktor.serialization)
     implementation(libs.ktor.negotiation)
-}
-
-tasks.compileKotlin {
-    kotlinOptions.jvmTarget = "21"
 }
 
 tasks.shadowJar {

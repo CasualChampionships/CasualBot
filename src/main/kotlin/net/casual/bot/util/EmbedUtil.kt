@@ -40,7 +40,6 @@ object EmbedUtil {
         return Embed {
             title = "Added ${player.name} to ${team.name}'s team"
             color = team.color.code
-            // TODO: Test if this has updated properly
             description = currentMembers(team)
             thumbnail = getPlayerHead(player)
         }
@@ -50,7 +49,6 @@ object EmbedUtil {
         return Embed {
             title = "Removed ${player.name} from ${team.name}'s team"
             color = team.color.code
-            // TODO: Test if this has updated properly
             description = currentMembers(team)
             thumbnail = team.logo
         }
@@ -116,7 +114,7 @@ object EmbedUtil {
     fun nextEventEmbed(name: String, time: Long): MessageEmbed {
         val version = CasualBot.config.minecraftVersion
         return Embed {
-            description = "# $name \n* Time and Date: <t:$time:F> (<t:$time:R>) \n* Max Team Size: 5 Players \n* Version: `$version` \n\nThe discord bot is now open for online to start creating teams for the event! "
+            description = "# $name \n* Time and Date: <t:$time:F> (<t:$time:R>) \n* Max Team Size: 5 Players \n* Version: `$version` \n\nThe discord bot is now open and online to start creating teams for the event! "
             color = 0xAA9BFF
         }
     }
