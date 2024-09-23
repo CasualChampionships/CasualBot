@@ -22,7 +22,7 @@ object EmbedUtil {
     fun playerTakenEmbed(player: DiscordPlayer, team: DiscordTeam): MessageEmbed {
         return Embed {
             title = "${player.name} is already on ${team.name}'s team"
-            color = team.color.code
+            color = team.color
             description = currentMembers(team)
             thumbnail = team.logo
         }
@@ -31,7 +31,7 @@ object EmbedUtil {
     fun playerNotInTeamEmbed(player: DiscordPlayer, team: DiscordTeam): MessageEmbed {
         return Embed {
             title = "${player.name} is not on ${team.name}'s team"
-            color = team.color.code
+            color = team.color
             description = currentMembers(team)
         }
     }
@@ -39,7 +39,7 @@ object EmbedUtil {
     fun addPlayerSuccessEmbed(player: DiscordPlayer, team: DiscordTeam): MessageEmbed {
         return Embed {
             title = "Added ${player.name} to ${team.name}'s team"
-            color = team.color.code
+            color = team.color
             description = currentMembers(team)
             thumbnail = getPlayerHead(player)
         }
@@ -48,7 +48,7 @@ object EmbedUtil {
     fun removePlayerSuccessEmbed(player: DiscordPlayer, team: DiscordTeam): MessageEmbed {
         return Embed {
             title = "Removed ${player.name} from ${team.name}'s team"
-            color = team.color.code
+            color = team.color
             description = currentMembers(team)
             thumbnail = team.logo
         }
@@ -57,7 +57,7 @@ object EmbedUtil {
     fun fullTeamEmbed(team: DiscordTeam): MessageEmbed {
         return Embed {
             title = "${team.name}'s team is full"
-            color = team.color.code
+            color = team.color
             description = currentMembers(team)
             thumbnail = team.logo
         }
@@ -66,7 +66,7 @@ object EmbedUtil {
     fun getTeamInfoEmbed(team: DiscordTeam): MessageEmbed {
         return Embed {
             title = "Info for ${team.name}"
-            color = team.color.code
+            color = team.color
             description = currentMembers(team)
             thumbnail = team.logo
         }
