@@ -9,7 +9,7 @@ ktor            = "2.3.12"
 klogging        = "7.0.0"
 logback         = "1.5.8"
 mojank          = "1.0.2"
-casual-database = "0.1.2"
+casual-database = "0.2.0"
 
 [libraries]
 coroutines      = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core"   , version.ref = "coroutines" }

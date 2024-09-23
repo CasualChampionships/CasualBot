@@ -1,10 +1,8 @@
 package net.casual.bot.commands
 
-import dev.minn.jda.ktx.interactions.commands.choice
 import dev.minn.jda.ktx.interactions.commands.option
 import dev.minn.jda.ktx.interactions.commands.subcommand
 import dev.minn.jda.ktx.interactions.components.getOption
-import net.casual.MinecraftColor
 import net.casual.bot.CasualBot
 import net.casual.bot.util.CommandUtils
 import net.casual.bot.util.CommandUtils.canModifyRole
@@ -42,11 +40,7 @@ object TeamCommand: Command {
         }
         command.subcommand("setcolor", "Sets the color for a team") {
             CommandUtils.addTeamArgument(this, teams)
-            option<String>("color", "The color", true) {
-                for (color in MinecraftColor.entries) {
-                    choice(color.formatted, color.name)
-                }
-            }
+            option<String>("color", "The color", true)
         }
         command.subcommand("clear", "Clears all the players from a team") {
             CommandUtils.addTeamArgument(this, teams)
@@ -100,7 +94,7 @@ object TeamCommand: Command {
                 name = teamName
                 prefix = teamName
                 logo = null
-                color = MinecraftColor.WHITE
+                color = 0xFFFFFF
                 wins = 0
                 roleId = role?.idLong
                 channelId = channel?.idLong
@@ -147,7 +141,7 @@ object TeamCommand: Command {
             return
         }
 
-        val color = enumValueOf<MinecraftColor>(event.getOption<String>("color")!!)
+        val color = Integer.decode(event.getOption<String>("color")!!)
 
         CasualBot.database.transaction {
             team.color = color
