@@ -1,7 +1,7 @@
 package net.casual.bot.util.impl
 
-import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.messages.editMessage
+import kotlinx.coroutines.future.await
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.interactions.InteractionHook

@@ -163,7 +163,11 @@ object CasualBot : CoroutineEventListener {
     private fun onMessageReceived(event: MessageReceivedEvent) {
         if (event.channel.idLong == config.channelIds.suggestions && event.author != jda.selfUser) {
             val message = event.message
-            message.createThreadChannel(message.contentRaw).queue()
+            var title = message.contentRaw
+            if (title.length > 100) {
+                title = title.take(97) + "..."
+            }
+            message.createThreadChannel(title).queue()
             message.addReaction(Emoji.fromUnicode("\uD83D\uDC4D")).queue()
             message.addReaction(Emoji.fromUnicode("\uD83D\uDC4E")).queue()
             event.channel.iterableHistory.find { it.author == jda.selfUser }?.delete()?.queue()
