@@ -219,6 +219,7 @@ object CasualBot : CoroutineEventListener {
     private fun createTeamWinsMessage(): MessageCreateData {
         val teams = database.transaction {
             DiscordTeam.all().orderBy(DiscordTeams.wins to SortOrder.DESC, DiscordTeams.name to SortOrder.ASC)
+                .filter { it.channelId != null }
                 .map { Named(it.name, FormattedStat.of(it.wins)) }
         }
         val image = ImageUtil.scoreboardImage("UHC Team Wins", teams)
