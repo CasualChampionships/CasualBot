@@ -21,7 +21,9 @@ object DatabaseUtils {
         }.getOrNull() ?: return null
         player = getDiscordPlayer(profile.id)
         if (player != null) {
-            player.name = profile.name
+            transaction {
+                player.name = profile.name
+            }
             return player
         }
         return transaction {

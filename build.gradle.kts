@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "net.casual"
-version = "0.2.0"
+version = "0.2.2"
 
 application.mainClass.set("net.casual.bot.CasualBot")
 
