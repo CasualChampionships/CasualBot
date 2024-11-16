@@ -133,11 +133,12 @@ object CasualBot : CoroutineEventListener {
 
     private suspend fun onScheduledEventCreate(event: ScheduledEventCreateEvent) {
         val name = event.scheduledEvent.name
+        val desc = event.scheduledEvent.description ?: ""
         val time = event.scheduledEvent.startTime.toLocalDateTime()
         val unix = time.atZone(ZoneId.of("UTC")).toEpochSecond()
 
         val statusChannelId = config.channelIds.status
-        val embed = MessageCreateBuilder().setContent("@everyone").setEmbeds(EmbedUtil.nextEventEmbed(name, unix)).build()
+        val embed = MessageCreateBuilder().setContent("@everyone").setEmbeds(EmbedUtil.nextEventEmbed(name, unix, desc)).build()
 
         MessageUtil.editLastMessages(event.jda, statusChannelId, embed)
 

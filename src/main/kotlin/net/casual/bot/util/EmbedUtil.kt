@@ -111,10 +111,10 @@ object EmbedUtil {
         }"
     }
 
-    fun nextEventEmbed(name: String, time: Long): MessageEmbed {
-        val version = CasualBot.config.minecraftVersion
+    fun nextEventEmbed(name: String, time: Long, desc: String): MessageEmbed {
         return Embed {
-            description = "# $name \n* Time and Date: <t:$time:F> (<t:$time:R>) \n* Max Team Size: 5 Players \n* Version: `$version` \n\nThe discord bot is now open and online to start creating teams for the event! "
+            description =
+                "# $name \n* Time and Date: <t:$time:F> (<t:$time:R>) \n$desc\n\nThe discord bot is now open and online to start creating teams for the event! "
             color = 0xAA9BFF
         }
     }
