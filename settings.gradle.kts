@@ -1,3 +1,9 @@
+rootProject.name = "CasualBot"
 
-rootProject.name = "UHC_Discord_Bot"
-
+dependencyResolutionManagement {
+    versionCatalogs {
+        create("libs") {
+            from(files("libs.versions.toml"))
+        }
+    }
+}

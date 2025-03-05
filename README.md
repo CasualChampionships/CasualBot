@@ -1,1 +1,1 @@
-# UHC_Discord_Bot
+# Casual Bot

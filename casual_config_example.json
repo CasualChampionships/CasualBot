@@ -1,0 +1,160 @@
+{
+  "dev": true,
+  "token": "",
+  "loadingMessage": "https://cdn.discordapp.com/emojis/1248373304885248061.gif?size=48&quality=lossless",
+  "databaseLogin": {
+    "url": "",
+    "username": "",
+    "password": ""
+  },
+  "guildId": 0,
+  "channelIds": {
+    "wins": 0,
+    "suggestions": 0,
+    "status": 0,
+    "info": 0,
+    "rules": 0
+  },
+  "embeds": [
+    {
+      "name": "info",
+      "images": [
+        "https://imgur.com/7hAMHkO.png"
+      ],
+      "embeds": [
+        {
+          "title": "World Border Info",
+          "description": "The world border will begin with a size of 6128 x 6128 blocks, centered on 0,0. The world border will shrink in 6 stages. When outside of the world border, you **__will be able__** to break and place blocks. To know which direction you must go in order to exit the border, there will be text across your screen, and an arrow will be rendered below your feet in the direction you should run.",
+          "color": 16730955
+        },
+        {
+          "title": "World Border Stages",
+          "description": "* Stage 1:  6128 x 6128 blocks | Waits for the grace period to end before moving.\n* Stage 2: 3064 x 306 blocks | Waits 10 minutes before moving again.\n* Stage 3: 1532 x 1532 blocks | Waits 5 minutes before moving again.\n* Stage 4: 510 x 510 blocks | Waits 3 minutes before moving again.\n* Stage 5: 102 x 102 blocks | Waits 1 minute before moving again.\n* Stage 6: 20 x 20 | Final border size.\n\nThe default time for border completion will be **__2 hours__**.\nThe size and speed of the nether world border is 1/8th of the overworld.\nThe end world border will always be big enough to fight the dragon.",
+          "color": 16745581
+        },
+        {
+          "title": "Grace Period",
+          "description": "By default, the grace period will last **__10 minutes__**. During this time, you will not be able to attack other players, but you **__will be able to__** take environmental damage.",
+          "color": 16104310
+        },
+        {
+          "title": "End of Game Glowing",
+          "description": "Once the border reaches its final size, a two-minute countdown will begin. After the countdown finishes, all remaining players will receive the glowing effect. Additionally, after the two-minute countdown, a nether portal will be placed in both the overworld and nether.",
+          "color": 16770429
+        },
+        {
+          "title": "Player Heads",
+          "description": "Players will **__always__** drop their heads on death. Regardless of the cause of death. If you kill a player their head will automatically go into your inventory if there is space. These heads **__can be eaten__** for some regeneration. Surrounding the player heads with gold ingots in a crafting table will give you a golden head, which give even better effects when eaten.",
+          "color": 9961346
+        },
+        {
+          "title": "Gameplay Changes",
+          "description": "* Full bright will be given automatically to all players.\n* Apples have an increased drop rate from oak and dark oak leaves.\n* Bows have a 1-second cooldown after firing. \n* Level 2 potions can't be brewed.\n* Most passive mobs will not have AI. Useful ones such as horses, villagers, dogs, and dolphins still have theirs. \n* Leaving the nether will give you a decent head start and **__never__** put you outside of the overworld world border.\n* The server uses custom resource packs in order to make everything look cool.",
+          "color": 5832620
+        },
+        {
+          "title": "Custom Commands",
+          "description": "* `/uhc fullbright` | Toggles full bright. Enabled by default.\n* `/uhc teamglow` | Toggles your teammates glowing. Enabled by default. \n* `/uhc pos` | Sends a message of your coordinates to your teammates.\n* `/chat <team|global|spectator>` | Toggle where your default chats are sent. \n - By default, you will be in your team chat during UHC.\n - Prefix your message with `!` to send single messages in global chat.\n* `/s <player>` |  Can be used by spectators to teleport to a certain player. Not specifying a player opens a custom GUI for teleporting.",
+          "color": 5881087
+        },
+        {
+          "title": "Teams",
+          "description": "For main events, teams will always consist of **__5 players__**. This **__does not__** mean that you need a full team in order to participate in the events. If you do not have a full team, you are still allowed to play, or you are welcome to join another team that also doesn't have all 5 players.",
+          "color": 7382015
+        },
+        {
+          "title": "Discord Bot",
+          "description": "To manage your team, you **__must__** use the Discord bot. Below are the commands.\n\n```\n /team add <server> <username>\n /team remove <server> <username>\n /team info <server>\n```\n\nThis information is directly transferred to the Minecraft server, so be sure it is always up-to-date. If you make changes while the server is already online, be sure to ping Sensei or Santa to make sure the server is updated.",
+          "color": 11181055
+        },
+        {
+          "title": "Spectators",
+          "description": "Members of your server who are not playing are welcome to spectate the game as long as they are following the rules for spectators. Spectators must also use the Discord bot in order to be allowed on the Minecraft server. There will be a `Spectator` option when trying to add yourself to a team.\n\nAdditionally, spectators will be in a new Adventure-Spectator gamemode. You can __double-tap__ your `crouch key` to toggle between no-clip spectator mode or use the gamemode switcher item on your hotbar.",
+          "color": 16753663
+        }
+      ]
+    },
+    {
+      "name": "faq",
+      "images": [
+        "https://i.imgur.com/XyYbKht.png"
+      ],
+      "embeds": [
+        {
+          "title": "__Frequently Asked Questions__",
+          "description": "**Q: What time zone is the announcement in?**\n\n**A:** The time is displayed dynamically in your local time zone.\n\n\n**Q: What is client side features can be used?**\n\n**A:** Read the rules. #📃│uhc-rules\n\n\n**Q: How long does a UHC last?**\n\n**A:** Usually around 2 to 2.5 hours.\n\n\n**Q: Can I stream the event?**\n\n**A:** Yes! You are can also share your stream in #📡│share-content\n\n\n**Q: I'm going to be late and miss the start of the event, can I still join?**\n\n**A:** Yes, but there are rules regarding that. Check out #📃│uhc-rules\n\n\n**Q: I need to leave mid-way through the game, can someone sub in for me?**\n\n**A:** No. This will give an unfair advantage towards the other teams.\n\n\n**Q: Help! Why do I see ▯ symbols in game?**\n\n**A:** Your resource packs did not load. Try relogging and if not ping Sensei.\n\n\n**Q:  Can I spectate the game?**\n\n**A:** Yes. Be sure to add yourself to the `Spectator` team using the discord bot and that you have read the rules regarding spectators. \n\n\n**Q: Can xyz server be added to the roster?**\n\n**A:** Sensei and Santa have a list for servers that want to join. Tell xyz's server admin to contact Santa.\n\n\n**Q: When is the next UHC / How often do UHC's happen?**\n\n**A:** The goal is to have one UHC every month. More details will be announced once Sensei and Santa figure out the date. \n\n\n**Q: What version will UHC be in?**\n\n**A:** We will always try to stay in the latest stable version. The version will also be announced when the event details are released. \n\n\n**Q: Why can I not no-clip as a spectator?**\n\n **A:** You are in a new Adventure-Spectator gamemode. You can __double-tap__ your `crouch key` to toggle between no-clip spectator mode or use the gamemode switcher item on your hotbar. \n\n\n**Q: Why does the vanilla spectator teleporting not work?** \n\n**A:** It has been disabled for UHC. Please use `/s` to open a custom GUI for teleporting or `/s <player>` to teleport to a specific player.",
+          "color": 11181055
+        }
+      ]
+    },
+    {
+      "name": "rules",
+      "images": [
+        "https://imgur.com/Hbveezq.png"
+      ],
+      "embeds": [
+        {
+          "title": "Mods and Clients",
+          "description": "The use of mods, custom clients, and texture packs should be kept to a minimum in order to make the game fair for everyone. Any features that change the vanilla behavior of the client are not allowed.",
+          "color": 16730955
+        },
+        {
+          "title": "Banned Mod Features",
+          "description": "* Disabling fog\n* Placement tweaks (e.g. flexibleBlockPlacement)\n* HUD mods (e.g. displaying other players' health)\n* Mini-map mods\n* X-raying and or block highlighting\n(This list may be updated as needed)\n\nYou may use any tools that are provided in vanilla (e.g. F3 debug tools).\nIf you are **__unsure__** about any mod, custom client, or texture pack, please ping Sensei or Santa.",
+          "color": 16745581
+        },
+        {
+          "title": "Exploits",
+          "description": "Exploits are unintended bugs that can give unfair advantages, and the use of any is **__strictly prohibited__** . Some examples are X-ray glitches, invincibility glitches, and duplication glitches. The **__ONLY__** exception to this is TNT duplication.",
+          "color": 16104310
+        },
+        {
+          "title": "PVP",
+          "description": "* No Portal Trapping or Portal Camping\n* No Nether Roof\n* No Instant Health Potions Or Arrows\n* No Level 2 Potions\n* No Cross Teaming\n* No Sky Basing\n* No Hiding Outside of the World Border",
+          "color": 16770429
+        },
+        {
+          "title": "PVP - Continued",
+          "description": "If you are camping in a structure that is over 20 blocks from the ground, you will be asked to move. If you are outside of the world border at the end of the game, when it has stopped moving, you will be asked to re-enter the border. Instant health potions and arrows will be removed from loot tables. Level two potions also cannot be brewed.",
+          "color": 9961346
+        },
+        {
+          "title": "Teammates",
+          "description": "If one or more of your teammates cannot make it on time for the start of an event, we will only allow them to participate if they show up within **__15 minutes__** of the game starting. Any later will cause an unfair advantage for the other teams. Also, if a teammate needs to leave during the event, another person will **__not__** be allowed to replace them.",
+          "color": 5832620
+        },
+        {
+          "title": "Chats",
+          "description": "Please be respectful of everyone in both voice chat and in-game chat. Remember that others could be streaming, so always remain family-friendly and avoid using profanity in public voice chats and in-game chats.",
+          "color": 5881087
+        },
+        {
+          "title": "Spectators",
+          "description": "Spectators should be mindful that they are **__not sharing ANY information__** with current players that they do not already know. This applies to both voice chats and in-game chats. Preferably, spectators should remain in <#787370935011246110>; however, it is understandable that they may want to be in voice chat with their team.",
+          "color": 7382015
+        },
+        {
+          "title": "Gentleman's Rules",
+          "description": "These rules do not cover absolutely everything. **__Do not__** try to find loopholes to work around the rules.",
+          "color": 11181055
+        },
+        {
+          "title": "Questions",
+          "description": "If you are ever unsure about anything please ping Sensei or Santa.",
+          "color": 16753663
+        }
+      ]
+    },
+    {
+      "name": "suggestions",
+      "title": "",
+      "embeds": [
+        {
+          "title": "How To Use Suggestions",
+          "description": "**Type Your Suggestion**\nA thread will automatically be created where you can put more details about your suggestion.\n\n**Use Reactions**\nReactions are generally a good way to gauge whether people like the idea of a suggestion. Please don't go over the top with unnecessary reactions, usually :thumbsup: and :thumbsdown: are good enough.\n\n**Feedback**\nFeel free to talk in the thread about the suggestion, but please keep discussions civil.",
+          "color": 11181055
+        }
+      ]
+    }
+  ]
+}

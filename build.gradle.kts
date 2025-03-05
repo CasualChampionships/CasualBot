@@ -1,62 +1,47 @@
 plugins {
-    kotlin("jvm") version "1.9.24"
-
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.shadow)
 
     `maven-publish`
     application
 }
 
-group = "net.casualuhc"
-version = "0.0.1"
+group = "net.casual"
+version = "0.2.2"
+
+application.mainClass.set("net.casual.bot.CasualBot")
 
 repositories {
     mavenCentral()
+    maven("https://maven.supersanta.me/snapshots")
     maven("https://jitpack.io/")
 }
 
 dependencies {
-    implementation("net.dv8tion:JDA:5.0.0-beta.20")
-    implementation("club.minnced:jda-ktx:0.11.0-beta.20")
-    implementation("com.google.code.gson:gson:2.9.0")
-    implementation("org.mongodb:mongo-java-driver:3.12.11")
-    implementation("com.github.SparklingComet:java-mojang-api:-SNAPSHOT")
+    implementation(kotlin("stdlib-jdk8"))
 
-    testImplementation(kotlin("test"))
-}
+    implementation(libs.coroutines)
 
-tasks.jar {
-    enabled = false
+    implementation(libs.jda)
+    implementation(libs.jda.ktx)
+    implementation(libs.json)
 
-    archiveClassifier.set("default")
+    implementation(libs.logback)
+    implementation(libs.klogging)
+
+    implementation(libs.mojank)
+
+    implementation(libs.casual.database)
+
+    implementation(libs.ktor.core)
+    implementation(libs.ktor.cio)
+    implementation(libs.ktor.serialization)
+    implementation(libs.ktor.negotiation)
 }
 
 tasks.shadowJar {
     // from("LICENSE")
 
     // archiveFileName.set("${rootProject.name}-${archiveVersion.get()}.jar")
-}
-
-tasks.distTar {
-    dependsOn("shadowJar")
-}
-
-tasks.distZip {
-    dependsOn("shadowJar")
-}
-
-tasks.startScripts {
-    dependsOn("shadowJar")
-}
-
-application {
-    mainClass.set("UHCBotKt")
-}
-
-publishing {
-    publications {
-        register("mavenJava", MavenPublication::class) {
-            artifact(tasks["shadowJar"])
-        }
-    }
 }

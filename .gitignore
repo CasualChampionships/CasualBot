@@ -1,7 +1,6 @@
 # gradle
 
 .gradle/
-gradle/
 build/
 out/
 
@@ -29,3 +28,4 @@ run/
 .obsidian/
 
 UHCConfig.json
+casual_config.json
