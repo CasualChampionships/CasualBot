@@ -12,10 +12,7 @@ import io.ktor.client.engine.cio.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import net.casual.bot.commands.ReloadCommand
-import net.casual.bot.commands.ScoreboardCommand
-import net.casual.bot.commands.StatCommand
-import net.casual.bot.commands.TeamCommand
+import net.casual.bot.commands.*
 import net.casual.bot.config.Config
 import net.casual.bot.util.CollectionUtils.concat
 import net.casual.bot.util.EmbedUtil
@@ -70,7 +67,7 @@ object CasualBot : CoroutineEventListener {
 
     val guild by lazy { jda.getGuildById(config.guildId) }
 
-    private val commands = listOf(ReloadCommand, ScoreboardCommand, StatCommand, TeamCommand).associateBy { it.name }
+    private val commands = listOf(EventCommand, ReloadCommand, ScoreboardCommand, StatCommand, TeamCommand).associateBy { it.name }
 
     @JvmStatic
     fun main(args: Array<String>) {
@@ -110,6 +107,9 @@ object CasualBot : CoroutineEventListener {
             MessageUtil.editLastMessages(jda, channels.rules, rules)
         }
 
+        if (config.databaseLogin.name != "casual_championships" && config.databaseLogin.name != "casual_championships_debug") {
+            return
+        }
         MessageUtil.editLastMessages(jda, channels.wins, createTeamWinsMessage())
     }
 
@@ -141,6 +141,10 @@ object CasualBot : CoroutineEventListener {
         val embed = MessageCreateBuilder().setContent("@everyone").setEmbeds(EmbedUtil.nextEventEmbed(name, unix, desc)).build()
 
         MessageUtil.editLastMessages(event.jda, statusChannelId, embed)
+
+        if (config.databaseLogin.name != "casual_championships" && config.databaseLogin.name != "casual_championships_debug") {
+            return
+        }
 
         for (team in database.getDiscordTeams()) {
             val teamChannelId = team.channelId ?: continue
@@ -206,7 +210,7 @@ object CasualBot : CoroutineEventListener {
 
     private fun createDatabase(): CasualDatabase {
         val login = config.databaseLogin
-        val database = CasualDatabase(login.url, login.username, login.password, DatabaseConfig {
+        val database = CasualDatabase(login.url + login.name, login.username, login.password, DatabaseConfig {
             sqlLogger = object : SqlLogger {
                 override fun log(context: StatementContext, transaction: Transaction) {
                     logger.info { context.expandArgs(transaction) }
