@@ -3,6 +3,7 @@
   "token": "",
   "loadingMessage": "https://cdn.discordapp.com/emojis/1248373304885248061.gif?size=48&quality=lossless",
   "databaseLogin": {
+    "name": "",
     "url": "",
     "username": "",
     "password": ""
