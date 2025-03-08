@@ -7,7 +7,9 @@ import kotlinx.serialization.Serializable
 data class TeamData(
     @SerialName("max_players")
     val maxPlayers: Int = 32,
-    val teams: List<Team> = listOf()
+    val teams: List<Team> = listOf(),
+    @SerialName("status")
+    var status: Boolean = false,
 ) {
     @Serializable
     data class Team(val name: String, val players: List<Player>)

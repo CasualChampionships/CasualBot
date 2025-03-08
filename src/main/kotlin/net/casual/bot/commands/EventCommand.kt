@@ -26,7 +26,7 @@ import kotlin.io.path.notExists
 import kotlin.io.path.outputStream
 
 object EventCommand : Command {
-    private val admin = setOf("size", "randomize", "list", "sync", "clear")
+    private val admin = setOf("size", "randomize", "list", "sync", "clear", "status")
 
     override val name = "event"
 
@@ -49,9 +49,19 @@ object EventCommand : Command {
         command.subcommand("list", "List all registered players") {}
         command.subcommand("sync", "Sync the event data") {}
         command.subcommand("clear", "Clear all teams") {}
+        command.subcommand("status", "Toggle the status of the event")
     }
 
     override suspend fun execute(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
+        val data = loadTeams()
+
+        val status = !data.status
+
+        if (status && !command.isAdministrator()) {
+            loading.replace(EmbedUtil.somethingWentWrongEmbed("Event registration is closed. You cannot join, leave, or participate.")).queue()
+            return
+        }
+
         if ((command.subcommandName in admin && !command.isAdministrator()) || !TwistedUtils.isTwistedDatabase(CasualBot.config.databaseLogin.name)) {
             loading.replace(EmbedUtil.noPermission()).queue()
             return
@@ -66,6 +76,7 @@ object EventCommand : Command {
             "list" -> listPlayers(loading)
             "sync" -> syncTeams(loading)
             "clear" -> clearTeams(loading)
+            "status" -> toogleStatus(loading)
         }
     }
 
@@ -117,7 +128,7 @@ object EventCommand : Command {
         val remainingSpots = data.maxPlayers - totalPlayers - 1
 
         if (joined) {
-            saveTeams(data.copy(teams = updatedTeams))
+            saveTeams(data.copy(teams = updatedTeams, maxPlayers = data.maxPlayers, status = data.status))
             loading.replace(EmbedUtil.eventJoinSuccessEmbed(username, remainingSpots)).queue()
             return
         }
@@ -142,7 +153,7 @@ object EventCommand : Command {
         val remainingSpots = data.maxPlayers - totalPlayers
 
         if (playerRemoved) {
-            saveTeams(data.copy(teams = updatedTeams))
+            saveTeams(data.copy(teams = updatedTeams, maxPlayers = data.maxPlayers, status = data.status))
             loading.replace(EmbedUtil.eventLeaveSuccessEmbed(remainingSpots)).queue()
             return
         }
@@ -196,10 +207,10 @@ object EventCommand : Command {
 
 
     private suspend fun setMaxPlayers(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
-        val sizeLimit = command.getOption<Int>("max-players")!!
+        val sizeLimit = command.getOption<Int>("size-limit")!!
         val data = loadTeams()
 
-        saveTeams(data.copy(maxPlayers = sizeLimit))
+        saveTeams(data.copy(teams = data.teams,  maxPlayers = sizeLimit, status = data.status))
         loading.replace("Max players set to $sizeLimit").queue()
     }
 
@@ -218,7 +229,7 @@ object EventCommand : Command {
             teamIndex = (teamIndex + 1) % numTeams
         }
 
-        saveTeams(data.copy(teams = newTeams))
+        saveTeams(data.copy(teams = newTeams, maxPlayers = data.maxPlayers, status = data.status))
 
         loading.replace("Teams have been randomized with $playersPerTeam players per team!").queue()
     }
@@ -292,10 +303,25 @@ object EventCommand : Command {
 
     private suspend fun clearTeams(loading: LoadingMessage) {
         val data = loadTeams()
-        saveTeams(data.copy(teams = data.teams.map { it.copy(players = listOf()) }))
-
+        saveTeams(data.copy(teams = data.teams.map { it.copy(players = listOf()) }, maxPlayers = data.maxPlayers, status = data.status))
         this.clearDatabaseTeams()
         loading.replace("All teams have been cleared!").queue()
+    }
+
+    private suspend fun toogleStatus( loading: LoadingMessage) {
+        val data = loadTeams()
+
+        data.status = !data.status
+
+        saveTeams(data)
+
+        val statusMessage = if (data.status) {
+            "Event registration is now **OPEN**."
+        } else {
+            "Event registration is now **CLOSED**."
+        }
+
+        loading.replace(statusMessage).queue()
     }
 
     private fun clearDatabaseTeams() {
@@ -335,7 +361,7 @@ object EventCommand : Command {
     private fun saveTeams(teams: TeamData) {
         val path = Path("teams.json")
         path.outputStream().use {
-            json.encodeToStream(teams, it)
+            json.encodeToStream(teams , it)
         }
     }
 
