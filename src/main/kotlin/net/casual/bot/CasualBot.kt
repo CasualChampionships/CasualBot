@@ -20,6 +20,7 @@ import net.casual.bot.util.ImageUtil
 import net.casual.bot.util.ImageUtil.toFileUpload
 import net.casual.bot.util.MessageUtil
 import net.casual.bot.util.MessageUtil.loading
+import net.casual.bot.util.TwistedUtils
 import net.casual.database.CasualDatabase
 import net.casual.database.DiscordTeam
 import net.casual.database.DiscordTeams
@@ -107,7 +108,7 @@ object CasualBot : CoroutineEventListener {
             MessageUtil.editLastMessages(jda, channels.rules, rules)
         }
 
-        if (config.databaseLogin.name != "casual_championships" && config.databaseLogin.name != "casual_championships_debug") {
+        if (TwistedUtils.isTwistedDatabase(config.databaseLogin.name)) {
             return
         }
         MessageUtil.editLastMessages(jda, channels.wins, createTeamWinsMessage())
@@ -142,7 +143,7 @@ object CasualBot : CoroutineEventListener {
 
         MessageUtil.editLastMessages(event.jda, statusChannelId, embed)
 
-        if (config.databaseLogin.name != "casual_championships" && config.databaseLogin.name != "casual_championships_debug") {
+        if (TwistedUtils.isTwistedDatabase(config.databaseLogin.name)) {
             return
         }
 

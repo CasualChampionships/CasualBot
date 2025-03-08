@@ -3,47 +3,40 @@ package net.casual.bot.commands
 import dev.minn.jda.ktx.interactions.commands.option
 import dev.minn.jda.ktx.interactions.commands.subcommand
 import dev.minn.jda.ktx.interactions.components.getOption
-import kotlinx.coroutines.delay
-import net.casual.bot.util.impl.LoadingMessage
-import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
-import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
-import java.io.File
-import kotlinx.serialization.*
-import kotlinx.serialization.json.*
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
+import kotlinx.serialization.json.encodeToStream
 import net.casual.bot.CasualBot
 import net.casual.bot.util.CommandUtils
 import net.casual.bot.util.CommandUtils.isAdministrator
 import net.casual.bot.util.DatabaseUtils.getOrCreateDiscordPlayer
 import net.casual.bot.util.EmbedUtil
+import net.casual.bot.util.TwistedUtils
+import net.casual.bot.util.impl.LoadingMessage
+import net.casual.bot.util.impl.TeamData
 import net.casual.database.DiscordPlayer
 import net.casual.database.DiscordTeam
+import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
+import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
+import net.dv8tion.jda.api.utils.MarkdownSanitizer
+import kotlin.io.path.Path
+import kotlin.io.path.inputStream
+import kotlin.io.path.notExists
+import kotlin.io.path.outputStream
 
 object EventCommand : Command {
     private val admin = setOf("size", "randomize", "list", "sync", "clear")
+
     override val name = "event"
+
     override val description = "Commands to manage an event with teams and players"
-
-    private fun loadTeams(): JsonObject {
-        val file = File("teams.json")
-        if (!file.exists()) {
-            file.createNewFile()
-            file.writeText("""{"maxPlayers":32,"teams":[{"id":"AquaAxolotls","players":[]},{"id":"LavenderLions","players":[]},{"id":"GoldenGoats","players":[]},{"id":"RedRhinos","players":[]},{"id":"OrangeOcelots","players":[]},{"id":"PlatinumPanthers","players":[]},{"id":"CobaltCobras","players":[]},{"id":"GreenGophers","players":[]},{"id":"AmberArmadillos","players":[]},{"id":"YellowYetis","players":[]},{"id":"LimeLlamas","players":[]},{"id":"CopperCats","players":[]},{"id":"TealTurtles","players":[]},{"id":"CrimsonCoyotes","players":[]},{"id":"IndigoIguanas","players":[]},{"id":"MagentaMice","players":[]}]}""")
-        }
-        return Json.parseToJsonElement(file.readText()) as JsonObject
-    }
-
-    private fun saveTeams(data: JsonObject) {
-        val file = File("teams.json")
-        file.writeText(Json.encodeToString(data))
-    }
 
     override fun build(command: SlashCommandData) {
         command.subcommand("join", "Join an event") {
             option<String>("username", "The username to join", true)
         }
-        command.subcommand("leave", "Leave the event") {
-            option<String>("username", "The username to leave", true)
-        }
+        command.subcommand("leave", "Leave the event")
         command.subcommand("spectate", "Spectate the event") {
             option<String>("username", "The username to spectate", true)
         }
@@ -59,12 +52,10 @@ object EventCommand : Command {
     }
 
     override suspend fun execute(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
-
-        if (command.subcommandName in admin && !command.isAdministrator() || ((CasualBot.config.databaseLogin.name != "twisted") && (CasualBot.config.databaseLogin.name != "twisted_debug"))) {
+        if ((command.subcommandName in admin && !command.isAdministrator()) || !TwistedUtils.isTwistedDatabase(CasualBot.config.databaseLogin.name)) {
             loading.replace(EmbedUtil.noPermission()).queue()
             return
         }
-
 
         when (command.subcommandName) {
             "join" -> joinEvent(command, loading)
@@ -72,9 +63,9 @@ object EventCommand : Command {
             "spectate" -> spectateEvent(command, loading)
             "size" -> setMaxPlayers(command, loading)
             "randomize" -> randomizeTeams(command, loading)
-            "list" -> listPlayers(command, loading)
-            "sync" -> syncTeams(command, loading)
-            "clear" -> clearTeams(command, loading)
+            "list" -> listPlayers(loading)
+            "sync" -> syncTeams(loading)
+            "clear" -> clearTeams(loading)
         }
     }
 
@@ -100,116 +91,77 @@ object EventCommand : Command {
 
         val userId = command.user.id
         val data = loadTeams()
-        val maxPlayers = data["maxPlayers"]!!.jsonPrimitive.int
-        val playersPerTeam = calculatePlayersPerTeam(maxPlayers)
+        val playersPerTeam = calculatePlayersPerTeam(data.maxPlayers)
 
-        val teams = data["teams"]!!.jsonArray
-        val updatedTeams = mutableListOf<JsonObject>()
+        val updatedTeams = ArrayList<TeamData.Team>()
         var joined = false
         var totalPlayers = 0
 
-        for (team in teams) {
-            val teamObject = team.jsonObject
-            val players = teamObject["players"]!!.jsonArray.toMutableList()
+        for (team in data.teams) {
+            val players = ArrayList(team.players)
             totalPlayers += players.size
 
             // Ensure user is not already in a team
-            if (players.any { it.jsonObject["id"]!!.jsonPrimitive.content == userId }) {
+            if (players.any { it.id == userId }) {
                 loading.replace(EmbedUtil.eventJoinFailure(username, "You have already registered!")).queue()
                 return
             }
 
             if (!joined && players.size < playersPerTeam) {
-                players.add(buildJsonObject {
-                    put("username", username)
-                    put("id", userId)
-                })
+                players.add(TeamData.Player(username, userId))
                 joined = true
             }
 
-            updatedTeams.add(buildJsonObject {
-                put("id", teamObject["id"]!!)
-                put("players", buildJsonArray { players.forEach { add(it) } })
-            })
+            updatedTeams.add(team.copy(players = players))
         }
-        val remainingSpots = maxPlayers - totalPlayers - 1
+        val remainingSpots = data.maxPlayers - totalPlayers - 1
 
         if (joined) {
-            val updatedData = data.toMutableMap()
-            updatedData["teams"] = buildJsonArray { updatedTeams.forEach { add(it) } }
-            saveTeams(JsonObject(updatedData))
-
+            saveTeams(data.copy(teams = updatedTeams))
             loading.replace(EmbedUtil.eventJoinSuccessEmbed(username, remainingSpots)).queue()
-        } else {
-            loading.replace(EmbedUtil.eventFullEmbed(username)).queue()
+            return
         }
+        loading.replace(EmbedUtil.eventFullEmbed(username)).queue()
     }
 
     private suspend fun leaveEvent(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
-        val (profile, username) = CommandUtils.getMojangProfile(command)
-        if (profile == null) {
-            loading.replace(EmbedUtil.somethingWentWrongEmbed("$username is not a valid username!")).queue()
-            return
-        }
-
         val userId = command.user.id
         val data = loadTeams()
-        val maxPlayers = data["maxPlayers"]!!.jsonPrimitive.int
-        val teams = data["teams"]!!.jsonArray
-        val updatedTeams = mutableListOf<JsonObject>()
-        var playerFound = false
+        val updatedTeams = ArrayList<TeamData.Team>()
+        var playerRemoved = false
         var totalPlayers = 0
 
-        for (team in teams) {
-            val players = team.jsonObject["players"]!!.jsonArray.toMutableList()
-            val playerIndex = players.indexOfFirst {
-                it.jsonObject["id"]!!.jsonPrimitive.content == userId && it.jsonObject["username"]!!.jsonPrimitive.content == username
-            }
+        for (team in data.teams) {
+            val updatedPlayers = ArrayList(team.players)
 
-            if (playerIndex != -1) {
-                players.removeAt(playerIndex) // Remove the player entry
-                playerFound = true
-            }
+            playerRemoved = playerRemoved || updatedPlayers.removeIf { player -> player.id == userId }
 
-            totalPlayers += players.size
-            updatedTeams.add(buildJsonObject {
-                put("id", team.jsonObject["id"]!!)
-                put("players", buildJsonArray { players.forEach { add(it) } })
-            })
+            totalPlayers += updatedPlayers.size
+            updatedTeams.add(team.copy(players = updatedPlayers))
         }
-        val remainingSpots = maxPlayers - totalPlayers
+        val remainingSpots = data.maxPlayers - totalPlayers
 
-        if (playerFound) {
-            val updatedData = data.toMutableMap()
-            updatedData["teams"] = buildJsonArray { updatedTeams.forEach { add(it) } }
-            saveTeams(JsonObject(updatedData))
-
-            loading.replace(EmbedUtil.eventLeaveSuccessEmbed(username, remainingSpots)).queue()
-
-        } else {
-            loading.replace(
-                EmbedUtil.eventLeaveFailureEmbed(
-                    username,
-                    "You cannot leave with a different username. Please use the one you joined with."
-                )
-            ).queue()
-
+        if (playerRemoved) {
+            saveTeams(data.copy(teams = updatedTeams))
+            loading.replace(EmbedUtil.eventLeaveSuccessEmbed(remainingSpots)).queue()
+            return
         }
+        loading.replace(
+            EmbedUtil.eventLeaveFailureEmbed(
+                "You cannot leave with a different username. Please use the one you joined with."
+            )
+        ).queue()
     }
-
 
     private suspend fun spectateEvent(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         val username = command.getOption<String>("username")!!
-        val (team) = CasualBot.database.getDiscordTeam("Spectator") to name
-
+        val spectators = CasualBot.database.getDiscordTeam("Spectator")
+            ?: throw IllegalStateException("Spectators team was missing from database, expected it to exist!")
 
         // Check if the player is already in a team
         val data = loadTeams()
-        val teams = data["teams"]!!.jsonArray
-
-        for (team in teams) {
-            val players = team.jsonObject["players"]!!.jsonArray
-            if (players.any { it.jsonObject["id"]!!.jsonPrimitive.content == command.user.id }) {
+        for (team in data.teams) {
+            if (team.players.any { it.id == command.user.id }) {
                 loading.replace(
                     EmbedUtil.eventJoinFailure(
                         username,
@@ -219,7 +171,6 @@ object EventCommand : Command {
                 return
             }
         }
-
 
         val player = CasualBot.database.getOrCreateDiscordPlayer(username)
         if (player == null) {
@@ -233,190 +184,127 @@ object EventCommand : Command {
                 player.team = null
             }
 
-            loading.replace(EmbedUtil.removePlayerSuccessEmbed(player, team!!)).queue()
+            loading.replace(EmbedUtil.removePlayerSuccessEmbed(player, spectators)).queue()
             return
         }
 
         CasualBot.database.transaction {
-            player.team = team
+            player.team = spectators
         }
-        loading.replace(EmbedUtil.addPlayerSuccessEmbed(player, team!!)).queue()
+        loading.replace(EmbedUtil.addPlayerSuccessEmbed(player, spectators)).queue()
     }
+
 
     private suspend fun setMaxPlayers(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         val sizeLimit = command.getOption<Int>("max-players")!!
         val data = loadTeams()
 
-        val updatedData = data.toMutableMap()
-        updatedData["maxPlayers"] = JsonPrimitive(sizeLimit)
-
-        // Save the updated data
-        saveTeams(JsonObject(updatedData))
+        saveTeams(data.copy(maxPlayers = sizeLimit))
         loading.replace("Max players set to $sizeLimit").queue()
     }
 
     private suspend fun randomizeTeams(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         val data = loadTeams()
-        val maxPlayers = data["maxPlayers"]!!.jsonPrimitive.int
+        val playersPerTeam = command.getOption<Int>("size") ?: 2
 
-        val playersPerTeam = command.getOption("size")?.asInt ?: 2
+        val shuffledPlayers = data.teams.flatMap { it.players }.shuffled()
+        val newTeams = data.teams.mapTo(ArrayList()) { it.copy(players = listOf()) }
 
-        // Collect all players while preserving their structure (username & id)
-        val allPlayers = data["teams"]!!.jsonArray
-            .flatMap { it.jsonObject["players"]!!.jsonArray }
-            .map { it.jsonObject }
-            .shuffled() // Shuffle the players
-
-        // Make sure empty teams don't get yeeted
-        val teamNames = data["teams"]!!.jsonArray
-            .map { it.jsonObject["id"]!!.jsonPrimitive.content }
-
-        val newTeams = mutableMapOf<String, MutableList<JsonObject>>()
-        for (teamName in teamNames) {
-            newTeams[teamName] = mutableListOf()
-        }
-
-        // Evenly Distribute
         var teamIndex = 0
-        val numTeams = (allPlayers.size + playersPerTeam - 1) / playersPerTeam
-        val activeTeams = teamNames.take(numTeams)
-
-        for (player in allPlayers) {
-            val teamName = activeTeams[teamIndex]
-            newTeams[teamName]!!.add(player)
-
-            teamIndex = (teamIndex + 1) % activeTeams.size
+        val numTeams = (shuffledPlayers.size + playersPerTeam - 1) / playersPerTeam
+        for (player in shuffledPlayers) {
+            val team = newTeams[teamIndex]
+            newTeams[teamIndex] = team.copy(players = team.players + player)
+            teamIndex = (teamIndex + 1) % numTeams
         }
 
-        val updatedTeams = buildJsonArray {
-            for (teamName in teamNames) {
-                add(buildJsonObject {
-                    put("id", teamName)
-                    put("players", buildJsonArray { newTeams[teamName]!!.forEach { add(it) } })
-                })
-            }
-        }
-
-        val updatedData = data.toMutableMap()
-        updatedData["teams"] = updatedTeams
-        saveTeams(JsonObject(updatedData))
+        saveTeams(data.copy(teams = newTeams))
 
         loading.replace("Teams have been randomized with $playersPerTeam players per team!").queue()
     }
 
-    private suspend fun clearTeams(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
+    private suspend fun listPlayers(loading: LoadingMessage) {
         val data = loadTeams()
 
-        val updatedTeams = data["teams"]!!.jsonArray.map { team ->
-            val teamObject = team.jsonObject
-            buildJsonObject {
-                put("id", teamObject["id"]!!)
-                put("players", buildJsonArray { }) // Empty player list
-            }
-        }
-
-        val updatedData = data.toMutableMap()
-        updatedData["teams"] = buildJsonArray { updatedTeams.forEach { add(it) } }
-
-        saveTeams(JsonObject(updatedData))
-
-        // Database teams
-        val players = CasualBot.database.getDiscordPlayers()
-        CasualBot.database.transaction {
-            for (player in players) {
-                player.team = null
-            }
-        }
-        loading.replace("All teams have been cleared!").queue()
-    }
-
-    private suspend fun listPlayers(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
-        val data = loadTeams()
-        val teams = data["teams"]?.jsonArray ?: buildJsonArray { }
-
-        val hasValidTeams = teams.any { team ->
-            val players = team.jsonObject["players"]?.jsonArray ?: return@any false
-            players.isNotEmpty()
-        }
-
-        if (!hasValidTeams) {
+        val hasAtLeastOneTeam = data.teams.any { team -> team.players.isNotEmpty() }
+        if (!hasAtLeastOneTeam) {
             loading.replace("No teams or players are currently registered.").queue()
             return
         }
 
-        val formattedTeams = teams.joinToString("\n\n") { formatTeam(it) }
+        val formattedTeams = data.teams.joinToString("\n\n") { team ->
+            "**${team.name}:**\n" + if (team.players.isNotEmpty()) {
+                team.players.joinToString("\n") { player ->
+                    "- ${MarkdownSanitizer.sanitize(player.username, MarkdownSanitizer.SanitizationStrategy.ESCAPE)}"
+                }
+            } else {
+                "No players in this team."
+            }
+        }
 
-        // Get Spectators team from the database
-        val (team, name) = CasualBot.database.getDiscordTeam("Spectator") to name
-        val spectators = EmbedUtil.currentMembers(team!!)
+        val team = CasualBot.database.getDiscordTeam("Spectator")
+            ?: throw IllegalStateException("Spectators team was missing from database, expected it to exist!")
+        val spectators = EmbedUtil.currentMembers(team)
 
         val message = buildString {
-            append("**Registered Players:**\n\n")
+            append("\n\n")
             append(formattedTeams)
             append("\n\n")
-            append("**Spectators:**\n$spectators") // Append Spectators at the end
+            append("**Spectators:**\n$spectators")
         }
 
         loading.replace(message).queue()
     }
 
-    private fun formatTeam(team: JsonElement): String {
-        val teamId = team.jsonObject["id"]!!.jsonPrimitive.content
-        val players = team.jsonObject["players"]!!.jsonArray
-
-        val formattedPlayers = if (players.isNotEmpty()) {
-            players.joinToString("\n") { player ->
-                "- ${player.jsonObject["username"]!!.jsonPrimitive.content}"
-            }
-        } else {
-            "No players in this team."
-        }
-
-        return "**$teamId:**\n$formattedPlayers"
-    }
-
-
-    private suspend fun syncTeams(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
+    private suspend fun syncTeams(loading: LoadingMessage) {
         val data = loadTeams()
-        val teams = data["teams"]?.jsonArray ?: return
 
-        val playerAssignments = mutableListOf<Pair<DiscordPlayer, DiscordTeam>>()
-
-        for (team in teams) {
-            val teamName = team.jsonObject["id"]!!.jsonPrimitive.content
-            val dbTeam = CasualBot.database.getDiscordTeam(teamName)
-
+        val updates = ArrayList<Pair<DiscordPlayer, DiscordTeam>>()
+        for (team in data.teams) {
+            val dbTeam = CasualBot.database.getDiscordTeam(team.name)
             if (dbTeam == null) {
-                loading.replace(EmbedUtil.somethingWentWrongEmbed("Could not find team: $teamName")).queue()
+                loading.replace(EmbedUtil.somethingWentWrongEmbed("Could not find team: ${team.name}")).queue()
                 continue
             }
 
-            val players = team.jsonObject["players"]!!.jsonArray
-            for (playerJson in players) {
-                val username = playerJson.jsonObject["username"]!!.jsonPrimitive.content
-                val player = CasualBot.database.getOrCreateDiscordPlayer(username)
+            for (player in team.players) {
+                val dbPlayer = CasualBot.database.getOrCreateDiscordPlayer(player.username)
 
-                if (player == null) {
-                    loading.replace(EmbedUtil.somethingWentWrongEmbed("Invalid player: $username")).queue()
+                if (dbPlayer == null) {
+                    loading.replace(EmbedUtil.somethingWentWrongEmbed("Invalid player: ${player.username}")).queue()
                     continue
                 }
 
-                playerAssignments.add(player to dbTeam)
-
-                // Please don't crash the db xD
-                delay(800)
+                updates.add(dbPlayer to dbTeam)
             }
         }
 
         CasualBot.database.transaction {
-            for ((player, dbTeam) in playerAssignments) {
-                player.team = dbTeam
+            clearDatabaseTeams()
+            for ((player, team) in updates) {
+                player.refresh()
+                player.team = team
             }
         }
 
-        delay(800)
-
         loading.replace("Teams have been successfully synced!").queue()
+    }
+
+    private suspend fun clearTeams(loading: LoadingMessage) {
+        val data = loadTeams()
+        saveTeams(data.copy(teams = data.teams.map { it.copy(players = listOf()) }))
+
+        this.clearDatabaseTeams()
+        loading.replace("All teams have been cleared!").queue()
+    }
+
+    private fun clearDatabaseTeams() {
+        CasualBot.database.transaction {
+            val players = CasualBot.database.getDiscordPlayers()
+            for (player in players) {
+                player.team = null
+            }
+        }
     }
 
     private fun calculatePlayersPerTeam(maxPlayers: Int): Int {
@@ -426,5 +314,34 @@ object EventCommand : Command {
             maxPlayers <= 52 -> 4
             else -> 5
         }
+    }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    private fun loadTeams(): TeamData {
+        val path = Path("teams.json")
+        if (path.notExists()) {
+            val default = TeamData()
+            path.outputStream().use {
+                json.encodeToStream<TeamData>(default, it)
+            }
+            return default
+        }
+        return path.inputStream().use {
+            json.decodeFromStream<TeamData>(it)
+        }
+    }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    private fun saveTeams(teams: TeamData) {
+        val path = Path("teams.json")
+        path.outputStream().use {
+            json.encodeToStream(teams, it)
+        }
+    }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    private val json = Json {
+        prettyPrint = true
+        prettyPrintIndent = "  "
     }
 }

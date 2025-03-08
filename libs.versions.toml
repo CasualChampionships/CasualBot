@@ -9,7 +9,7 @@ ktor            = "3.0.1"
 klogging        = "7.0.0"
 logback         = "1.5.12"
 mojank          = "1.0.3"
-casual-database = "0.2.0"
+casual-database = "0.2.1"
 
 [libraries]
 coroutines      = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core"   , version.ref = "coroutines" }
@@ -19,7 +19,7 @@ jda-ktx         = { module = "club.minnced:jda-ktx"                            ,
 klogging        = { module = "io.github.oshai:kotlin-logging-jvm"              , version.ref = "klogging" }
 logback         = { module = "ch.qos.logback:logback-classic"                  , version.ref = "logback" }
 mojank          = { module = "me.senseiwells:mojank"                           , version.ref = "mojank" }
-casual-database = { module = "net.casual-championships:casual-database"        , version.ref = "casual-database" }
+casual-database = { module = "net.casualchampionships:casual-database"         , version.ref = "casual-database" }
 
 ktor-cio           = { module = "io.ktor:ktor-client-cio"                , version.ref = "ktor"}
 ktor-core          = { module = "io.ktor:ktor-client-core-jvm"           , version.ref = "ktor"}

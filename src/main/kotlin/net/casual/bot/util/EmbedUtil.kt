@@ -96,7 +96,7 @@ object EmbedUtil {
         }
     }
 
-    public fun currentMembers(members: DiscordTeam): String {
+    fun currentMembers(members: DiscordTeam): String {
         val players = CasualBot.database.transaction {
             members.players.sortedWith(Comparator.comparing { it.name })
         }
@@ -119,17 +119,17 @@ object EmbedUtil {
         }
     }
 
-    fun eventLeaveSuccessEmbed(username: String, remainingSpots: Int): MessageEmbed {
+    fun eventLeaveSuccessEmbed(remainingSpots: Int): MessageEmbed {
         return Embed {
-            title = "Successfully left the event, $username!"
+            title = "Successfully left the event!"
             color = 5832620
             description = "Spots Remaining: $remainingSpots"
         }
     }
 
-    fun eventLeaveFailureEmbed(username: String, reason: String): MessageEmbed {
+    fun eventLeaveFailureEmbed(reason: String): MessageEmbed {
         return Embed {
-            title = "Failure to leave the event, $username!"
+            title = "Failed to leave the event!"
             color = 16730955
             description = reason
         }

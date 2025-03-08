@@ -4,12 +4,12 @@ import dev.minn.jda.ktx.interactions.commands.option
 import dev.minn.jda.ktx.interactions.commands.subcommand
 import dev.minn.jda.ktx.interactions.components.getOption
 import net.casual.bot.CasualBot
-import net.casual.bot.config.Config
 import net.casual.bot.util.CommandUtils
 import net.casual.bot.util.CommandUtils.canModifyRole
 import net.casual.bot.util.CommandUtils.isAdministrator
 import net.casual.bot.util.DatabaseUtils.getOrCreateDiscordPlayer
 import net.casual.bot.util.EmbedUtil
+import net.casual.bot.util.TwistedUtils
 import net.casual.bot.util.impl.LoadingMessage
 import net.casual.database.DiscordTeam
 import net.dv8tion.jda.api.entities.Role
@@ -18,9 +18,6 @@ import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionE
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 
 object TeamCommand: Command {
-    var config = Config.read()
-        private set
-
     private val admin = setOf("create", "delete", "setlogo", "setcolour", "clearall")
 
     override val name = "team"
@@ -65,7 +62,7 @@ object TeamCommand: Command {
 
     override suspend fun execute(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         // TODO: Add a check to see if there is an event currently scheduled.
-        if ((command.subcommandName in admin && !command.isAdministrator()) || (CasualBot.config.databaseLogin.name != "casual_championships" && CasualBot.config.databaseLogin.name != "casual_championships_debug")) {
+        if ((command.subcommandName in admin && !command.isAdministrator()) || TwistedUtils.isTwistedDatabase(CasualBot.config.databaseLogin.name)) {
             loading.replace(EmbedUtil.noPermission()).queue()
             return
         }
