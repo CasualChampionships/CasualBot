@@ -76,7 +76,7 @@ object EventCommand : Command {
             "list" -> listPlayers(loading)
             "sync" -> syncTeams(loading)
             "clear" -> clearTeams(loading)
-            "status" -> toogleStatus(loading)
+            "status" -> toggleStatus(loading)
         }
     }
 
@@ -159,7 +159,7 @@ object EventCommand : Command {
         }
         loading.replace(
             EmbedUtil.eventLeaveFailureEmbed(
-                "You cannot leave with a different username. Please use the one you joined with."
+                "You were never registered for the event."
             )
         ).queue()
     }
@@ -172,7 +172,7 @@ object EventCommand : Command {
         // Check if the player is already in a team
         val data = loadTeams()
         for (team in data.teams) {
-            if (team.players.any { it.id == command.user.id }) {
+            if ((team.players.any { it.username == username }) || (team.players.any { it.id == command.user.id }) ) {
                 loading.replace(
                     EmbedUtil.eventJoinFailure(
                         username,
@@ -308,7 +308,7 @@ object EventCommand : Command {
         loading.replace("All teams have been cleared!").queue()
     }
 
-    private suspend fun toogleStatus( loading: LoadingMessage) {
+    private suspend fun toggleStatus(loading: LoadingMessage) {
         val data = loadTeams()
 
         data.status = !data.status
