@@ -28,6 +28,7 @@ import kotlin.io.path.outputStream
 
 @Serializable
 data class DatabaseLogin(
+    val name: String = "",
     val url: String = "",
     val username: String? = null,
     val password: String? = null

@@ -9,6 +9,7 @@ import net.casual.bot.util.CommandUtils.canModifyRole
 import net.casual.bot.util.CommandUtils.isAdministrator
 import net.casual.bot.util.DatabaseUtils.getOrCreateDiscordPlayer
 import net.casual.bot.util.EmbedUtil
+import net.casual.bot.util.TwistedUtils
 import net.casual.bot.util.impl.LoadingMessage
 import net.casual.database.DiscordTeam
 import net.dv8tion.jda.api.entities.Role
@@ -61,7 +62,7 @@ object TeamCommand: Command {
 
     override suspend fun execute(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         // TODO: Add a check to see if there is an event currently scheduled.
-        if (command.subcommandName in admin && !command.isAdministrator()) {
+        if ((command.subcommandName in admin && !command.isAdministrator()) || TwistedUtils.isTwistedDatabase(CasualBot.config.databaseLogin.name)) {
             loading.replace(EmbedUtil.noPermission()).queue()
             return
         }

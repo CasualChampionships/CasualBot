@@ -96,7 +96,7 @@ object EmbedUtil {
         }
     }
 
-    private fun currentMembers(members: DiscordTeam): String {
+    fun currentMembers(members: DiscordTeam): String {
         val players = CasualBot.database.transaction {
             members.players.sortedWith(Comparator.comparing { it.name })
         }
@@ -111,10 +111,51 @@ object EmbedUtil {
         }"
     }
 
+    fun eventJoinSuccessEmbed(username: String, remainingSpots: Int): MessageEmbed {
+        return Embed {
+            title = "Successfully joined the event, $username!"
+            color = 5832620
+            description = "Spots Remaining: $remainingSpots"
+        }
+    }
+
+    fun eventLeaveSuccessEmbed(remainingSpots: Int): MessageEmbed {
+        return Embed {
+            title = "Successfully left the event!"
+            color = 5832620
+            description = "Spots Remaining: $remainingSpots"
+        }
+    }
+
+    fun eventLeaveFailureEmbed(reason: String): MessageEmbed {
+        return Embed {
+            title = "Failed to leave the event!"
+            color = 16730955
+            description = reason
+        }
+    }
+
+    fun eventJoinFailure(username: String, reason: String): MessageEmbed {
+        return Embed {
+            title = "Failure to join the event, $username!"
+            color = 16730955
+            description = reason
+        }
+    }
+
+    fun eventFullEmbed(username: String): MessageEmbed {
+        return Embed {
+            title = "Failure to join the event, $username!"
+            color = 16730955
+            description = "No available spots left to join."
+        }
+    }
+
+
     fun nextEventEmbed(name: String, time: Long, desc: String): MessageEmbed {
         return Embed {
             description =
-                "# $name \n* Time and Date: <t:$time:F> (<t:$time:R>) \n$desc\n\nThe discord bot is now open and online to start creating teams for the event! "
+                "# $name \n* Time and Date: <t:$time:F> (<t:$time:R>) \n$desc\n\nThe discord bot is now open and online to start creating teams or registering for the event! "
             color = 0xAA9BFF
         }
     }
