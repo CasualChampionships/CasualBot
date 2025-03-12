@@ -81,19 +81,20 @@ object EventCommand : Command {
     }
 
     private suspend fun joinEvent(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
-        val (profile, username) = CommandUtils.getMojangProfile(command)
-        if (profile == null) {
-            loading.replace(EmbedUtil.somethingWentWrongEmbed("$username is not a valid username!")).queue()
+        val username = command.getOption<String>("username")!!
+
+        val player = CasualBot.database.getOrCreateDiscordPlayer(username)
+        if (player == null) {
+            loading.replace(EmbedUtil.somethingWentWrongEmbed("Invalid player: $username")).queue()
             return
         }
 
         // Check if the player is already a spectator
-        val player = CasualBot.database.getOrCreateDiscordPlayer(username)
         val existingTeam = CasualBot.database.transaction { player?.team }
         if (existingTeam != null && existingTeam.name == "Spectator") {
             loading.replace(
                 EmbedUtil.eventJoinFailure(
-                    username,
+                    player.name,
                     "You are already a spectator! Leave the spectating team first!"
                 )
             ).queue()
@@ -114,12 +115,12 @@ object EventCommand : Command {
 
             // Ensure user is not already in a team
             if (players.any { it.id == userId }) {
-                loading.replace(EmbedUtil.eventJoinFailure(username, "You have already registered!")).queue()
+                loading.replace(EmbedUtil.eventJoinFailure(player.name, "You have already registered!")).queue()
                 return
             }
 
             if (!joined && players.size < playersPerTeam) {
-                players.add(TeamData.Player(username, userId))
+                players.add(TeamData.Player(player.name, userId))
                 joined = true
             }
 
@@ -129,10 +130,10 @@ object EventCommand : Command {
 
         if (joined) {
             saveTeams(data.copy(teams = updatedTeams, maxPlayers = data.maxPlayers, status = data.status))
-            loading.replace(EmbedUtil.eventJoinSuccessEmbed(username, remainingSpots)).queue()
+            loading.replace(EmbedUtil.eventJoinSuccessEmbed(player.name, remainingSpots)).queue()
             return
         }
-        loading.replace(EmbedUtil.eventFullEmbed(username)).queue()
+        loading.replace(EmbedUtil.eventFullEmbed(player.name)).queue()
     }
 
     private suspend fun leaveEvent(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
