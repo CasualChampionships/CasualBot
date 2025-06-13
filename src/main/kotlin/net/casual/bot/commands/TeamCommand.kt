@@ -116,7 +116,7 @@ object TeamCommand: Command {
         CasualBot.database.transaction {
             team.delete()
         }
-        loading.replace("Successfully delete team: $name").queue()
+        loading.replace("Successfully deleted team: $name").queue()
         CasualBot.reloadCommands()
     }
 
