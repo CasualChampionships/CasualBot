@@ -3,7 +3,6 @@ package net.casual.bot.util
 import dev.minn.jda.ktx.interactions.commands.choice
 import dev.minn.jda.ktx.interactions.commands.option
 import dev.minn.jda.ktx.interactions.components.getOption
-import me.senseiwells.mojank.CachedMojank
 import me.senseiwells.mojank.SimpleMojankProfile
 import net.casual.bot.CasualBot
 import net.casual.database.DiscordTeam
@@ -63,8 +62,6 @@ object CommandUtils {
         option: String = "username"
     ): Pair<SimpleMojankProfile?, String> {
         val username = event.getOption<String>(option) ?: throw IllegalArgumentException("Unknown option $option!")
-        return CachedMojank.attempt {
-            usernameToSimpleProfile(username)
-        }.getOrNull() to username
+        return DatabaseUtils.getSimpleMojangProfile(username).getOrNull() to username
     }
 }
