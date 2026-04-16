@@ -17,9 +17,14 @@ object CommandUtils {
         return user.hasPermission(Permission.ADMINISTRATOR)
     }
 
+    fun GenericCommandInteractionEvent.isOrganizer(): Boolean {
+        val user = this.member ?: return false
+        return this.isAdministrator() || user.roles.any { it.idLong == CasualBot.config.organizerId }
+    }
+
     fun GenericCommandInteractionEvent.canModifyRole(roleId: Long): Boolean {
         val user = this.member ?: return false
-        if (isAdministrator()) {
+        if (isOrganizer()) {
             return true
         }
         if (user.roles.any { it.idLong == roleId }) {

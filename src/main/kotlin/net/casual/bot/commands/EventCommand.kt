@@ -8,8 +8,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import kotlinx.serialization.json.encodeToStream
 import net.casual.bot.CasualBot
-import net.casual.bot.util.CommandUtils
-import net.casual.bot.util.CommandUtils.isAdministrator
+import net.casual.bot.util.CommandUtils.isOrganizer
 import net.casual.bot.util.DatabaseUtils.getOrCreateDiscordPlayer
 import net.casual.bot.util.EmbedUtil
 import net.casual.bot.util.TwistedUtils
@@ -57,12 +56,12 @@ object EventCommand : Command {
 
         val status = !data.status
 
-        if (status && !command.isAdministrator()) {
+        if (status && !command.isOrganizer()) {
             loading.replace(EmbedUtil.somethingWentWrongEmbed("Event registration is closed. You cannot join, leave, or participate.")).queue()
             return
         }
 
-        if ((command.subcommandName in admin && !command.isAdministrator()) || !TwistedUtils.isTwistedDatabase(CasualBot.config.databaseLogin.name)) {
+        if ((command.subcommandName in admin && !command.isOrganizer()) || !TwistedUtils.isTwistedDatabase(CasualBot.config.databaseLogin.name)) {
             loading.replace(EmbedUtil.noPermission()).queue()
             return
         }
