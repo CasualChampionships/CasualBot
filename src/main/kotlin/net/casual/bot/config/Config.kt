@@ -101,6 +101,7 @@ data class Config(
     val databaseLogin: DatabaseLogin = DatabaseLogin(),
     val minecraftVersion: String = "",
     val guildId: Long = 0L,
+    val organizerId: Long = 0L,
     val channelIds: EmbedChannels = EmbedChannels(),
     private val embeds: List<Embeds> = listOf(),
 ) {

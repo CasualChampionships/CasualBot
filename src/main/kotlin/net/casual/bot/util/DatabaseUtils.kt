@@ -3,6 +3,9 @@ package net.casual.bot.util
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import me.senseiwells.mojank.CachedMojank
+import me.senseiwells.mojank.MojankEndpoints
+import me.senseiwells.mojank.MojankResult
+import me.senseiwells.mojank.SimpleMojankProfile
 import net.casual.database.CasualDatabase
 import net.casual.database.DiscordPlayer
 import net.casual.stat.FormattedStat
@@ -11,14 +14,20 @@ import net.casual.util.Named
 import java.util.*
 
 object DatabaseUtils {
+    private val mojank = CachedMojank(endpoints = MojankEndpoints.ALTERNATE)
+
+    suspend fun getSimpleMojangProfile(username: String): MojankResult<SimpleMojankProfile> {
+        return mojank.attempt(3) {
+            usernameToSimpleProfile(username)
+        }
+    }
+
     suspend fun CasualDatabase.getOrCreateDiscordPlayer(username: String): DiscordPlayer? {
         var player = getDiscordPlayer(username)
         if (player != null) {
             return player
         }
-        val profile = CachedMojank.attempt(3) {
-            usernameToSimpleProfile(username)
-        }.getOrNull() ?: return null
+        val profile = getSimpleMojangProfile(username).getOrNull() ?: return null
         player = getDiscordPlayer(profile.id)
         if (player != null) {
             transaction {
@@ -39,7 +48,7 @@ object DatabaseUtils {
         if (player != null) {
             return player
         }
-        val username = CachedMojank.attempt(3) {
+        val username = mojank.attempt(3) {
             uuidToUsername(uuid)
         }.getOrNull() ?: return null
         return transaction {

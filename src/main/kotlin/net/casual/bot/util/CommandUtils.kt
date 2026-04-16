@@ -3,7 +3,6 @@ package net.casual.bot.util
 import dev.minn.jda.ktx.interactions.commands.choice
 import dev.minn.jda.ktx.interactions.commands.option
 import dev.minn.jda.ktx.interactions.components.getOption
-import me.senseiwells.mojank.CachedMojank
 import me.senseiwells.mojank.SimpleMojankProfile
 import net.casual.bot.CasualBot
 import net.casual.database.DiscordTeam
@@ -18,9 +17,14 @@ object CommandUtils {
         return user.hasPermission(Permission.ADMINISTRATOR)
     }
 
+    fun GenericCommandInteractionEvent.isOrganizer(): Boolean {
+        val user = this.member ?: return false
+        return this.isAdministrator() || user.roles.any { it.idLong == CasualBot.config.organizerId }
+    }
+
     fun GenericCommandInteractionEvent.canModifyRole(roleId: Long): Boolean {
         val user = this.member ?: return false
-        if (isAdministrator()) {
+        if (isOrganizer()) {
             return true
         }
         if (user.roles.any { it.idLong == roleId }) {
@@ -63,8 +67,6 @@ object CommandUtils {
         option: String = "username"
     ): Pair<SimpleMojankProfile?, String> {
         val username = event.getOption<String>(option) ?: throw IllegalArgumentException("Unknown option $option!")
-        return CachedMojank.attempt {
-            usernameToSimpleProfile(username)
-        }.getOrNull() to username
+        return DatabaseUtils.getSimpleMojangProfile(username).getOrNull() to username
     }
 }

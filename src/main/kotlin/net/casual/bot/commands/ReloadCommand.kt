@@ -2,7 +2,7 @@ package net.casual.bot.commands
 
 import dev.minn.jda.ktx.interactions.commands.restrict
 import net.casual.bot.CasualBot
-import net.casual.bot.util.CommandUtils.isAdministrator
+import net.casual.bot.util.CommandUtils.isOrganizer
 import net.casual.bot.util.EmbedUtil
 import net.casual.bot.util.TwistedUtils
 import net.casual.bot.util.impl.LoadingMessage
@@ -18,7 +18,7 @@ object ReloadCommand: Command {
     }
 
     override suspend fun execute(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
-        if (!command.isAdministrator()) {
+        if (!command.isOrganizer()) {
             loading.replace(EmbedUtil.noPermission()).queue()
             return
         }

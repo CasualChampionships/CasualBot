@@ -6,7 +6,7 @@ import dev.minn.jda.ktx.interactions.components.getOption
 import net.casual.bot.CasualBot
 import net.casual.bot.util.CommandUtils
 import net.casual.bot.util.CommandUtils.canModifyRole
-import net.casual.bot.util.CommandUtils.isAdministrator
+import net.casual.bot.util.CommandUtils.isOrganizer
 import net.casual.bot.util.DatabaseUtils.getOrCreateDiscordPlayer
 import net.casual.bot.util.EmbedUtil
 import net.casual.bot.util.TwistedUtils
@@ -62,7 +62,7 @@ object TeamCommand: Command {
 
     override suspend fun execute(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         // TODO: Add a check to see if there is an event currently scheduled.
-        if ((command.subcommandName in admin && !command.isAdministrator()) || TwistedUtils.isTwistedDatabase(CasualBot.config.databaseLogin.name)) {
+        if ((command.subcommandName in admin && !command.isOrganizer()) || TwistedUtils.isTwistedDatabase(CasualBot.config.databaseLogin.name)) {
             loading.replace(EmbedUtil.noPermission()).queue()
             return
         }
@@ -116,7 +116,7 @@ object TeamCommand: Command {
         CasualBot.database.transaction {
             team.delete()
         }
-        loading.replace("Successfully delete team: $name").queue()
+        loading.replace("Successfully deleted team: $name").queue()
         CasualBot.reloadCommands()
     }
 
@@ -158,7 +158,7 @@ object TeamCommand: Command {
             return
         }
 
-        if (!event.isAdministrator()) {
+        if (!event.isOrganizer()) {
             val roleId = team.roleId
             if (roleId == null || !event.canModifyRole(roleId)) {
                 loading.replace(EmbedUtil.noPermission()).queue()
