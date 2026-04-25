@@ -2,10 +2,10 @@ package net.casual.bot.util.impl
 
 import dev.minn.jda.ktx.messages.editMessage
 import kotlinx.coroutines.future.await
+import net.dv8tion.jda.api.components.MessageTopLevelComponent
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.interactions.InteractionHook
-import net.dv8tion.jda.api.interactions.components.LayoutComponent
 import net.dv8tion.jda.api.requests.RestAction
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction
 import net.dv8tion.jda.api.utils.AttachedFile
@@ -22,7 +22,7 @@ class LoadingMessage(private val future: CompletableFuture<InteractionHook>) {
     suspend fun replace(
         content: String? = null,
         embeds: Collection<MessageEmbed>? = null,
-        components: Collection<LayoutComponent>? = null,
+        components: Collection<MessageTopLevelComponent>? = null,
         attachments: Collection<AttachedFile>? = null
     ): WebhookMessageEditAction<Message> {
         this.hasReplaced = true

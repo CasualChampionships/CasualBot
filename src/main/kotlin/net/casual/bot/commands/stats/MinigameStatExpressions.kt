@@ -1,7 +1,7 @@
 package net.casual.bot.commands.stats
 
 import net.casual.database.stats.MinigameStats
-import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.v1.core.Expression
 
 class StatExpression(
     val lifetime: Expression<*>?,

@@ -10,7 +10,6 @@ import net.casual.database.CasualDatabase
 import net.casual.database.DiscordPlayer
 import net.casual.stat.FormattedStat
 import net.casual.stat.UnresolvedPlayerStat
-import net.casual.util.Named
 import java.util.*
 
 object DatabaseUtils {

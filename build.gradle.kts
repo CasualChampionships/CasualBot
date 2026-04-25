@@ -42,6 +42,8 @@ dependencies {
 }
 
 tasks.shadowJar {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
     // from("LICENSE")
 
     // archiveFileName.set("${rootProject.name}-${archiveVersion.get()}.jar")

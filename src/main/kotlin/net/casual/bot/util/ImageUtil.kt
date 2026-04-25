@@ -8,7 +8,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.casual.bot.CasualBot
 import net.casual.stat.FormattedStat
-import net.casual.util.Named
 import net.dv8tion.jda.api.utils.FileUpload
 import java.awt.Color
 import java.awt.Font
@@ -16,7 +15,7 @@ import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.awt.image.RenderedImage
 import java.io.ByteArrayOutputStream
-import java.util.UUID
+import java.util.*
 import javax.imageio.ImageIO
 import kotlin.math.max
 

@@ -23,16 +23,11 @@ import net.casual.database.stats.UHCMinigameStats
 import net.casual.util.sum
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.max
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.sum
-import kotlin.collections.HashMap
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.iterator
-import kotlin.collections.listOf
-import kotlin.collections.set
+import org.jetbrains.exposed.v1.core.JoinType
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.max
+import org.jetbrains.exposed.v1.core.sum
+import org.jetbrains.exposed.v1.jdbc.selectAll
 
 object ScoreboardCommand: Command {
     override val name = "scoreboard"

@@ -11,6 +11,7 @@ import net.casual.bot.util.CommandUtils
 import net.casual.bot.util.EmbedUtil
 import net.casual.bot.util.ImageUtil
 import net.casual.bot.util.ImageUtil.toFileUpload
+import net.casual.bot.util.Named
 import net.casual.bot.util.StringUtil.capitalise
 import net.casual.bot.util.StringUtil.capitaliseAll
 import net.casual.bot.util.impl.LoadingMessage
@@ -22,11 +23,12 @@ import net.casual.database.stats.DuelMinigameStats
 import net.casual.database.stats.MinigameStats
 import net.casual.database.stats.UHCMinigameStats
 import net.casual.stat.FormattedStat
-import net.casual.util.Named
 import net.casual.util.sum
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.util.*
 
 object StatCommand: Command {

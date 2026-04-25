@@ -21,11 +21,11 @@ import net.casual.bot.util.ImageUtil
 import net.casual.bot.util.ImageUtil.toFileUpload
 import net.casual.bot.util.MessageUtil
 import net.casual.bot.util.MessageUtil.loading
+import net.casual.bot.util.Named
 import net.casual.database.CasualDatabase
 import net.casual.database.DiscordTeam
 import net.casual.database.DiscordTeams
 import net.casual.stat.FormattedStat
-import net.casual.util.Named
 import net.dv8tion.jda.api.entities.ScheduledEvent
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.GenericEvent
@@ -39,12 +39,12 @@ import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.cache.CacheFlag
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import net.dv8tion.jda.api.utils.messages.MessageCreateData
-import org.jetbrains.exposed.sql.DatabaseConfig
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.SqlLogger
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.statements.StatementContext
-import org.jetbrains.exposed.sql.statements.expandArgs
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.SqlLogger
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.statements.StatementContext
+import org.jetbrains.exposed.v1.core.statements.expandArgs
 import java.net.SocketTimeoutException
 import java.time.ZoneId
 
