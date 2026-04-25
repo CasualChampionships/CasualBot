@@ -27,23 +27,6 @@ import kotlin.io.path.inputStream
 import kotlin.io.path.outputStream
 
 @Serializable
-data class DatabaseLogin(
-    val name: String = "",
-    val url: String = "",
-    val username: String? = null,
-    val password: String? = null
-)
-
-@Serializable
-data class EmbedChannels(
-    val wins: Long = 0L,
-    val suggestions: Long = 0L,
-    val status: Long = 0L,
-    val info: Long = 0L,
-    val rules: Long = 0L
-)
-
-@Serializable
 data class Embeds(
     val name: String,
     val title: String = "",
@@ -96,13 +79,8 @@ data class Embed(
 @OptIn(ExperimentalSerializationApi::class)
 data class Config(
     val dev: Boolean = true,
-    val token: String = "",
     val loadingMessage: String = "",
-    val databaseLogin: DatabaseLogin = DatabaseLogin(),
     val minecraftVersion: String = "",
-    val guildId: Long = 0L,
-    val organizerId: Long = 0L,
-    val channelIds: EmbedChannels = EmbedChannels(),
     private val embeds: List<Embeds> = listOf(),
 ) {
     @Transient

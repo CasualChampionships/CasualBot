@@ -30,3 +30,5 @@ run/
 UHCConfig.json
 teams.json
 casual_config.json
+
+.env

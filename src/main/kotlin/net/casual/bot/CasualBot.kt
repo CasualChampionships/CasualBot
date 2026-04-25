@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import net.casual.bot.commands.*
 import net.casual.bot.config.Config
+import net.casual.bot.config.Env
 import net.casual.bot.util.CollectionUtils.concat
 import net.casual.bot.util.EmbedUtil
 import net.casual.bot.util.ImageUtil
@@ -57,22 +58,29 @@ object CasualBot : CoroutineEventListener {
     var config = Config.read()
         private set
 
+    var env = Env.read()
+        private set
+
     val database = createDatabase()
 
-    val jda = light(config.token, enableCoroutines = true) {
+    val jda = light(env.botToken, enableCoroutines = true) {
         enableIntents(GatewayIntent.MESSAGE_CONTENT, GatewayIntent.SCHEDULED_EVENTS)
         enableCache(CacheFlag.SCHEDULED_EVENTS)
         addEventListeners(this@CasualBot)
     }
 
 
-    val guild by lazy { jda.getGuildById(config.guildId) }
+    val guild by lazy { jda.getGuildById(env.guildId) }
 
     private val commands = listOf(EventCommand, ReloadCommand, ScoreboardCommand, StatCommand, TeamCommand).associateBy { it.name }
 
     @JvmStatic
     fun main(args: Array<String>) {
         
+    }
+
+    fun isTwisted(): Boolean {
+        return TwistedUtils.isTwistedDatabase(env.databaseName)
     }
 
     fun reloadConfig() {
@@ -95,23 +103,20 @@ object CasualBot : CoroutineEventListener {
     }
 
     suspend fun reloadEmbeds() {
-        val channels = config.channelIds
-
         val info = config.embedsByName("info")?.asMessageCreateData()
         val faq = config.embedsByName("faq")?.asMessageCreateData()
         if (info != null && faq != null) {
-            MessageUtil.editLastMessages(jda, channels.info, info.concat(faq))
+            MessageUtil.editLastMessages(jda, env.infoChannel, info.concat(faq))
         }
 
         val rules = config.embedsByName("rules")?.asMessageCreateData()
         if (rules != null) {
-            MessageUtil.editLastMessages(jda, channels.rules, rules)
+            MessageUtil.editLastMessages(jda, env.rulesChannel, rules)
         }
 
-        if (TwistedUtils.isTwistedDatabase(config.databaseLogin.name)) {
-            return
+        if (!isTwisted()) {
+            MessageUtil.editLastMessages(jda, env.winsChannel, createTeamWinsMessage())
         }
-        MessageUtil.editLastMessages(jda, channels.wins, createTeamWinsMessage())
     }
 
     override suspend fun onEvent(event: GenericEvent) {
@@ -138,12 +143,12 @@ object CasualBot : CoroutineEventListener {
         val time = event.scheduledEvent.startTime.toLocalDateTime()
         val unix = time.atZone(ZoneId.of("UTC")).toEpochSecond()
 
-        val statusChannelId = config.channelIds.status
+        val statusChannelId = env.statusChannel
         val embed = MessageCreateBuilder().setContent("@everyone").setEmbeds(EmbedUtil.nextEventEmbed(name, unix, desc)).build()
 
         MessageUtil.editLastMessages(event.jda, statusChannelId, embed)
 
-        if (TwistedUtils.isTwistedDatabase(config.databaseLogin.name)) {
+        if (isTwisted()) {
             return
         }
 
@@ -160,14 +165,14 @@ object CasualBot : CoroutineEventListener {
         val status = event.newStatus
 
         if (status == ScheduledEvent.Status.COMPLETED) {
-            val channelId = config.channelIds.status
+            val channelId = env.statusChannel
             val embed = MessageCreateBuilder().setEmbeds(EmbedUtil.noEventScheduledEmbed()).build()
             MessageUtil.editLastMessages(event.jda, channelId, embed)
         }
     }
 
     private fun onMessageReceived(event: MessageReceivedEvent) {
-        if (event.channel.idLong == config.channelIds.suggestions && event.author != jda.selfUser) {
+        if (event.channel.idLong == env.suggestionsChannel && event.author != jda.selfUser) {
             val message = event.message
             var title = message.contentRaw
             if (title.length > 100) {
@@ -210,8 +215,10 @@ object CasualBot : CoroutineEventListener {
     }
 
     private fun createDatabase(): CasualDatabase {
-        val login = config.databaseLogin
-        val database = CasualDatabase(login.url + login.name, login.username, login.password, DatabaseConfig {
+        val url = env.databaseUrl + env.databaseName
+        val username = env.databaseUsername
+        val password = env.databasePassword
+        val database = CasualDatabase(url, username, password, DatabaseConfig {
             sqlLogger = object : SqlLogger {
                 override fun log(context: StatementContext, transaction: Transaction) {
                     logger.info { context.expandArgs(transaction) }

@@ -19,7 +19,7 @@ object CommandUtils {
 
     fun GenericCommandInteractionEvent.isOrganizer(): Boolean {
         val user = this.member ?: return false
-        return this.isAdministrator() || user.roles.any { it.idLong == CasualBot.config.organizerId }
+        return this.isAdministrator() || user.roles.any { it.idLong == CasualBot.env.organizerId }
     }
 
     fun GenericCommandInteractionEvent.canModifyRole(roleId: Long): Boolean {

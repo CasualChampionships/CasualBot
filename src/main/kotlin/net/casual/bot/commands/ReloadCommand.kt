@@ -26,7 +26,7 @@ object ReloadCommand: Command {
         CasualBot.reloadConfig()
         CasualBot.reloadEmbeds()
 
-        if (TwistedUtils.isTwistedDatabase(CasualBot.config.databaseLogin.name)) {
+        if (CasualBot.isTwisted()) {
             return loading.replace("Successfully reloaded! \nBot is current in **Twisted** Mode, some features might be disabled!").queue()
         }
 

@@ -62,7 +62,7 @@ object TeamCommand: Command {
 
     override suspend fun execute(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         // TODO: Add a check to see if there is an event currently scheduled.
-        if ((command.subcommandName in admin && !command.isOrganizer()) || TwistedUtils.isTwistedDatabase(CasualBot.config.databaseLogin.name)) {
+        if ((command.subcommandName in admin && !command.isOrganizer()) || CasualBot.isTwisted()) {
             loading.replace(EmbedUtil.noPermission()).queue()
             return
         }

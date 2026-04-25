@@ -61,7 +61,7 @@ object EventCommand : Command {
             return
         }
 
-        if ((command.subcommandName in admin && !command.isOrganizer()) || !TwistedUtils.isTwistedDatabase(CasualBot.config.databaseLogin.name)) {
+        if ((command.subcommandName in admin && !command.isOrganizer()) || !CasualBot.isTwisted()) {
             loading.replace(EmbedUtil.noPermission()).queue()
             return
         }

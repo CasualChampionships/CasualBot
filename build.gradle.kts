@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.jda)
     implementation(libs.jda.ktx)
     implementation(libs.json)
+    implementation(libs.properties)
 
     implementation(libs.logback)
     implementation(libs.klogging)
