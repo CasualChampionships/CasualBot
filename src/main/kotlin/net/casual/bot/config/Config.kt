@@ -79,6 +79,7 @@ data class Embed(
 @OptIn(ExperimentalSerializationApi::class)
 data class Config(
     val dev: Boolean = true,
+    val twisted: Boolean = false,
     val loadingMessage: String = "",
     val minecraftVersion: String = "",
     private val embeds: List<Embeds> = listOf(),
@@ -114,7 +115,7 @@ data class Config(
             return Config().also { this.write(it) }
         }
 
-        private fun write(config: Config) {
+        fun write(config: Config) {
             try {
                 this.path.outputStream().use {
                     json.encodeToStream(config, it)

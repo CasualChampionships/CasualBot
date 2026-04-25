@@ -12,8 +12,10 @@ import kotlin.io.path.readLines
 data class Env(
     @SerialName("BOT_TOKEN")
     val botToken: String = "",
-    @SerialName("DB_NAME")
-    val databaseName: String = "",
+    @SerialName("DB_CANON_NAME")
+    val databaseCanonName: String = "",
+    @SerialName("DB_TWISTED_NAME")
+    val databaseTwistedName: String = "",
     @SerialName("DB_URL")
     val databaseUrl: String = "",
     @SerialName("DB_USERNAME")

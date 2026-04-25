@@ -11,7 +11,6 @@ import net.casual.bot.CasualBot
 import net.casual.bot.util.CommandUtils.isOrganizer
 import net.casual.bot.util.DatabaseUtils.getOrCreateDiscordPlayer
 import net.casual.bot.util.EmbedUtil
-import net.casual.bot.util.TwistedUtils
 import net.casual.bot.util.impl.LoadingMessage
 import net.casual.bot.util.impl.TeamData
 import net.casual.database.DiscordPlayer

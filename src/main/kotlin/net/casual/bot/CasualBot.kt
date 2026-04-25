@@ -21,7 +21,6 @@ import net.casual.bot.util.ImageUtil
 import net.casual.bot.util.ImageUtil.toFileUpload
 import net.casual.bot.util.MessageUtil
 import net.casual.bot.util.MessageUtil.loading
-import net.casual.bot.util.TwistedUtils
 import net.casual.database.CasualDatabase
 import net.casual.database.DiscordTeam
 import net.casual.database.DiscordTeams
@@ -61,7 +60,8 @@ object CasualBot : CoroutineEventListener {
     var env = Env.read()
         private set
 
-    val database = createDatabase()
+    var database = createDatabase()
+        private set
 
     val jda = light(env.botToken, enableCoroutines = true) {
         enableIntents(GatewayIntent.MESSAGE_CONTENT, GatewayIntent.SCHEDULED_EVENTS)
@@ -72,7 +72,7 @@ object CasualBot : CoroutineEventListener {
 
     val guild by lazy { jda.getGuildById(env.guildId) }
 
-    private val commands = listOf(EventCommand, ReloadCommand, ScoreboardCommand, StatCommand, TeamCommand).associateBy { it.name }
+    private val commands = listOf(AdminCommand, EventCommand, ReloadCommand, ScoreboardCommand, StatCommand, TeamCommand).associateBy { it.name }
 
     @JvmStatic
     fun main(args: Array<String>) {
@@ -80,11 +80,27 @@ object CasualBot : CoroutineEventListener {
     }
 
     fun isTwisted(): Boolean {
-        return TwistedUtils.isTwistedDatabase(env.databaseName)
+        return config.twisted
+    }
+
+    fun modifyConfig(dev: Boolean = config.dev, twisted: Boolean = config.twisted) {
+        config = config.copy(dev = dev, twisted = twisted)
+        Config.write(config)
+        reloadDatabase()
+    }
+
+    fun getDatabaseName(): String {
+        val base = if (config.twisted) env.databaseTwistedName else env.databaseCanonName
+        return if (config.dev) "${base}_debug" else base
     }
 
     fun reloadConfig() {
         this.config = Config.read()
+    }
+
+    fun reloadDatabase() {
+        this.database.close()
+        this.database = this.createDatabase()
     }
 
     suspend fun reloadCommands() {
@@ -215,7 +231,7 @@ object CasualBot : CoroutineEventListener {
     }
 
     private fun createDatabase(): CasualDatabase {
-        val url = env.databaseUrl + env.databaseName
+        val url = env.databaseUrl + getDatabaseName()
         val username = env.databaseUsername
         val password = env.databasePassword
         val database = CasualDatabase(url, username, password, DatabaseConfig {
