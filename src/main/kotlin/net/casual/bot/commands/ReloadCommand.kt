@@ -2,10 +2,9 @@ package net.casual.bot.commands
 
 import dev.minn.jda.ktx.interactions.commands.restrict
 import net.casual.bot.CasualBot
-import net.casual.bot.util.CommandUtils.isOrganizer
-import net.casual.bot.util.EmbedUtil
-import net.casual.bot.util.TwistedUtils
-import net.casual.bot.util.impl.LoadingMessage
+import net.casual.bot.utils.CommandUtils.isOrganizer
+import net.casual.bot.utils.EventEmbeds
+import net.casual.bot.utils.impl.LoadingMessage
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 
@@ -19,17 +18,18 @@ object ReloadCommand: Command {
 
     override suspend fun execute(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         if (!command.isOrganizer()) {
-            loading.replace(EmbedUtil.noPermission()).queue()
+            loading.replace(EventEmbeds.organizersOnly())
             return
         }
 
         CasualBot.reloadConfig()
         CasualBot.reloadEmbeds()
 
-        if (CasualBot.isTwisted()) {
-            return loading.replace("Successfully reloaded! \nBot is current in **Twisted** Mode, some features might be disabled!").queue()
-        }
-
-        loading.replace("Successfully reloaded!").queue()
+        loading.replace(
+            EventEmbeds.notice(
+                "Reloaded",
+                "Settings were re-read and every message group was republished."
+            )
+        )
     }
 }

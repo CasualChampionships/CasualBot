@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "net.casual"
-version = "0.3.1"
+version = "1.0.0-beta.1"
 
 application.mainClass.set("net.casual.bot.CasualBot")
 
@@ -34,6 +34,10 @@ dependencies {
     implementation(libs.mojank)
 
     implementation(libs.casual.database)
+
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.jdbc)
 
     implementation(libs.ktor.core)
     implementation(libs.ktor.cio)

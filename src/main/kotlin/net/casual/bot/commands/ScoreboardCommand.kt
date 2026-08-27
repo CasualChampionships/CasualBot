@@ -7,18 +7,18 @@ import dev.minn.jda.ktx.interactions.commands.subcommand
 import dev.minn.jda.ktx.interactions.components.getOption
 import net.casual.bot.CasualBot
 import net.casual.bot.commands.stats.MinigameStatExpressions
-import net.casual.bot.util.DatabaseUtils.resolveScoreboard
-import net.casual.bot.util.EmbedUtil
-import net.casual.bot.util.ImageUtil
-import net.casual.bot.util.ImageUtil.toFileUpload
-import net.casual.bot.util.StringUtil.capitalise
-import net.casual.bot.util.StringUtil.capitaliseAll
-import net.casual.bot.util.impl.LoadingMessage
+import net.casual.bot.utils.CommandUtils
+import net.casual.bot.utils.DatabaseUtils.resolveScoreboard
+import net.casual.bot.utils.EventEmbeds
+import net.casual.bot.utils.ImageUtil
+import net.casual.bot.utils.ImageUtil.toFileUpload
+import net.casual.bot.utils.capitalize
+import net.casual.bot.utils.capitalizeAll
+import net.casual.bot.utils.impl.LoadingMessage
 import net.casual.database.Events
 import net.casual.database.Minigame
 import net.casual.database.Minigames
 import net.casual.database.stats.DuelMinigameStats
-import net.casual.database.stats.MinigameStats
 import net.casual.database.stats.UHCMinigameStats
 import net.casual.util.sum
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
@@ -36,7 +36,7 @@ object ScoreboardCommand: Command {
     private val minigames = HashMap<String, MinigameStatExpressions>()
 
     init {
-        provider("duels", DuelMinigameStats) {
+        this.minigames["duels"] = MinigameStatExpressions.of(DuelMinigameStats) {
             stat("kills", DuelMinigameStats.kills.sum())
             stat("damage_taken", DuelMinigameStats.damageTaken.sum())
             stat("damage_healed", DuelMinigameStats.damageHealed.sum())
@@ -45,7 +45,7 @@ object ScoreboardCommand: Command {
             lifetimeStat("most_kills", DuelMinigameStats.kills.max())
             lifetimeStat("wins", DuelMinigameStats.won.sum())
         }
-        provider("uhc", UHCMinigameStats) {
+        this.minigames["uhc"] = MinigameStatExpressions.of(UHCMinigameStats) {
             stat("kills", UHCMinigameStats.kills.sum())
             stat("damage_taken", UHCMinigameStats.damageTaken.sum())
             stat("damage_healed", UHCMinigameStats.damageHealed.sum())
@@ -64,29 +64,18 @@ object ScoreboardCommand: Command {
         }
     }
 
-    private fun provider(name: String, stats: MinigameStats, body: MinigameStatExpressions.Builder.() -> Unit) {
-        val builder = MinigameStatExpressions.Builder()
-        builder.body()
-        val provider = builder.build(stats)
-        minigames[name] = provider
-    }
-
     override fun build(command: SlashCommandData) {
         command.restrict(true)
 
         val events = CasualBot.database.getEvents()
-        for ((minigame, expressions) in minigames) {
+        for ((minigame, expressions) in this.minigames) {
             command.subcommand(minigame, "The minigame of the stat you want to display") {
                 option<String>("type", "The stat type you want to display", true) {
                     for (type in expressions.types()) {
-                        choice(type.capitaliseAll("_"), type)
+                        choice(type.capitalizeAll("_"), type)
                     }
                 }
-                option<String>("event", "The event you want to display the scoreboard for") {
-                    for (event in events) {
-                        choice(event.name, event.name)
-                    }
-                }
+                CommandUtils.addEventOption(this, events)
             }
         }
     }
@@ -96,21 +85,16 @@ object ScoreboardCommand: Command {
         val stat = command.getOption<String>("type")!!
         val event = command.getOption<String>("event")
 
-        val expressions = minigames[minigame]
-        if (expressions == null) {
-            loading.replace(EmbedUtil.somethingWentWrongEmbed("Unable to fetch scoreboard")).queue()
-            return
-        }
-
-        val stats = expressions.get(stat)
-        if (stats == null) {
-            loading.replace(EmbedUtil.somethingWentWrongEmbed("Unable to fetch scoreboard")).queue()
+        val expressions = this.minigames[minigame]
+        val stats = expressions?.get(stat)
+        if (expressions == null || stats == null) {
+            loading.replace(EventEmbeds.wentWrong("Unable to fetch scoreboard"))
             return
         }
 
         val scoreboard = if (event != null) {
             if (stats.minigame == null) {
-                loading.replace(EmbedUtil.somethingWentWrongEmbed("This stat type doesn't support specific event stats")).queue()
+                loading.replace(EventEmbeds.wentWrong("This stat type doesn't support specific event stats"))
                 return
             }
             CasualBot.database.transaction {
@@ -123,7 +107,7 @@ object ScoreboardCommand: Command {
             }
         } else {
             if (stats.lifetime == null) {
-                loading.replace(EmbedUtil.somethingWentWrongEmbed("This stat type doesn't support lifetime stats")).queue()
+                loading.replace(EventEmbeds.wentWrong("This stat type doesn't support lifetime stats"))
                 return
             }
             CasualBot.database.transaction {
@@ -132,14 +116,14 @@ object ScoreboardCommand: Command {
         }
 
         if (scoreboard.isEmpty()) {
-            loading.replace(EmbedUtil.somethingWentWrongEmbed("The scoreboard is empty!")).queue()
+            loading.replace(EventEmbeds.wentWrong("The scoreboard is empty!"))
             return
         }
 
         val formatted = CasualBot.database.resolveScoreboard(scoreboard)
-        val title = "${minigame.capitalise()}: ${stat.capitaliseAll("_")}"
+        val title = "${minigame.capitalize()}: ${stat.capitalizeAll("_")}"
         val image = ImageUtil.scoreboardImage(title, formatted)
         val file = image.toFileUpload("stats.png")
-        loading.replace(attachments = listOf(file)).queue()
+        loading.replace(attachments = listOf(file))
     }
 }

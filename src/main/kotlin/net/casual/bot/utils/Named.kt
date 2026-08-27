@@ -1,4 +1,4 @@
-package net.casual.bot.util
+package net.casual.bot.utils
 
 data class Named<T>(
     val name: String,

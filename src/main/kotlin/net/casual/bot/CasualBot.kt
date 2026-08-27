@@ -9,19 +9,21 @@ import dev.minn.jda.ktx.messages.MessageCreate
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import net.casual.bot.commands.*
-import net.casual.bot.config.Config
+import net.casual.bot.config.BotConfig
+import net.casual.bot.config.BotState
+import net.casual.bot.config.LegacyConfig
 import net.casual.bot.config.Env
-import net.casual.bot.util.CollectionUtils.concat
-import net.casual.bot.util.EmbedUtil
-import net.casual.bot.util.ImageUtil
-import net.casual.bot.util.ImageUtil.toFileUpload
-import net.casual.bot.util.MessageUtil
-import net.casual.bot.util.MessageUtil.loading
-import net.casual.bot.util.Named
+import net.casual.bot.database.BotDatabase.initializeBotTables
+import net.casual.bot.panel.PanelInteractions
+import net.casual.bot.panel.RegistrationPanel
+import net.casual.bot.event.EventService
+import net.casual.bot.utils.EventEmbeds
+import net.casual.bot.utils.ImageUtil
+import net.casual.bot.utils.ImageUtil.toFileUpload
+import net.casual.bot.utils.MessageUtil
+import net.casual.bot.utils.MessageUtil.loading
+import net.casual.bot.utils.Named
 import net.casual.database.CasualDatabase
 import net.casual.database.DiscordTeam
 import net.casual.database.DiscordTeams
@@ -31,7 +33,13 @@ import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.guild.scheduledevent.ScheduledEventCreateEvent
 import net.dv8tion.jda.api.events.guild.scheduledevent.update.ScheduledEventUpdateStatusEvent
+import net.casual.bot.commands.ConfirmInteractions
+import net.casual.bot.embed.EmbedInteractions
+import net.casual.bot.embed.EmbedStore
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.events.session.ShutdownEvent
@@ -50,52 +58,64 @@ import java.time.ZoneId
 
 
 object CasualBot : CoroutineEventListener {
+    private const val SUGGESTIONS_HISTORY = 50
+
     val logger = KotlinLogging.logger("CasualBot")
     val httpClient = HttpClient(CIO)
-    val coroutineScope = CoroutineScope(Dispatchers.Default + Job())
 
-    var config = Config.read()
-        private set
+    private var legacyConfig = LegacyConfig.read()
 
     var env = Env.read()
         private set
 
-    var database = createDatabase()
+    var state = BotState.read(this.legacyConfig)
         private set
 
-    val jda = light(env.botToken, enableCoroutines = true) {
+    init {
+        BotConfig.load(this.env, this.legacyConfig)
+    }
+
+    var database = this.createDatabase()
+        private set
+
+    val jda = light(this.env.botToken, enableCoroutines = true) {
         enableIntents(GatewayIntent.MESSAGE_CONTENT, GatewayIntent.SCHEDULED_EVENTS)
         enableCache(CacheFlag.SCHEDULED_EVENTS)
         addEventListeners(this@CasualBot)
     }
 
+    val guild by lazy { this.jda.getGuildById(this.env.guildId) }
 
-    val guild by lazy { jda.getGuildById(env.guildId) }
-
-    private val commands = listOf(AdminCommand, EventCommand, ReloadCommand, ScoreboardCommand, StatCommand, TeamCommand).associateBy { it.name }
+    private val commands = listOf(
+        AdminCommand,
+        ConfigCommand,
+        EmbedCommand,
+        EventCommand,
+        MeCommand,
+        ReloadCommand,
+        ScoreboardCommand,
+        StatCommand,
+        TeamCommand
+    ).associateBy(Command::name)
 
     @JvmStatic
     fun main(args: Array<String>) {
         
     }
 
-    fun isTwisted(): Boolean {
-        return config.twisted
-    }
-
-    fun modifyConfig(dev: Boolean = config.dev, twisted: Boolean = config.twisted) {
-        config = config.copy(dev = dev, twisted = twisted)
-        Config.write(config)
-        reloadDatabase()
+    fun modifyState(dev: Boolean = this.state.dev, twisted: Boolean = this.state.twisted) {
+        this.state = this.state.copy(dev = dev, twisted = twisted)
+        BotState.write(this.state)
+        this.reloadDatabase()
     }
 
     fun getDatabaseName(): String {
-        val base = if (config.twisted) env.databaseTwistedName else env.databaseCanonName
-        return if (config.dev) "${base}_debug" else base
+        val base = if (this.state.twisted) this.env.databaseTwistedName else this.env.databaseCanonName
+        return if (this.state.dev) "${base}_debug" else base
     }
 
     fun reloadConfig() {
-        this.config = Config.read()
+        BotConfig.load(this.env, this.legacyConfig)
     }
 
     fun reloadDatabase() {
@@ -109,7 +129,7 @@ object CasualBot : CoroutineEventListener {
             command.delete().queue()
         }
 
-        jda.updateCommands {
+        this.jda.updateCommands {
             for (command in commands.values) {
                 slash(command.name, command.description) {
                     command.build(this)
@@ -119,38 +139,68 @@ object CasualBot : CoroutineEventListener {
     }
 
     suspend fun reloadEmbeds() {
-        val info = config.embedsByName("info")?.asMessageCreateData()
-        val faq = config.embedsByName("faq")?.asMessageCreateData()
-        if (info != null && faq != null) {
-            MessageUtil.editLastMessages(jda, env.infoChannel, info.concat(faq))
+        for (channelId in EmbedStore.channels()) {
+            val messages = EmbedStore.groupsForChannel(channelId).map { EmbedStore.toMessageData(it) }
+            MessageUtil.editLastMessages(this.jda, channelId, messages)
         }
 
-        val rules = config.embedsByName("rules")?.asMessageCreateData()
-        if (rules != null) {
-            MessageUtil.editLastMessages(jda, env.rulesChannel, rules)
-        }
-
-        if (!isTwisted()) {
-            MessageUtil.editLastMessages(jda, env.winsChannel, createTeamWinsMessage())
+        if (!this.state.twisted) {
+            BotConfig.read { winsChannel }?.let {
+                MessageUtil.editLastMessages(this.jda, it, this.createTeamWinsMessage())
+            }
         }
     }
 
     override suspend fun onEvent(event: GenericEvent) {
         when (event) {
-            is ReadyEvent -> onReady()
-            is MessageReceivedEvent -> onMessageReceived(event)
-            is SlashCommandInteractionEvent -> onSlashCommandInteraction(event)
-            is ShutdownEvent -> onShutdown()
-            is ScheduledEventCreateEvent -> onScheduledEventCreate(event)
-            is ScheduledEventUpdateStatusEvent -> onScheduledEventUpdateStatus(event)
+            is ReadyEvent -> this.onReady()
+            is MessageReceivedEvent -> this.onMessageReceived(event)
+            is SlashCommandInteractionEvent -> this.onSlashCommandInteraction(event)
+            is ButtonInteractionEvent -> this.onButtonInteraction(event)
+            is CommandAutoCompleteInteractionEvent -> this.onAutoComplete(event)
+            is ModalInteractionEvent -> this.onModalInteraction(event)
+            is ShutdownEvent -> this.onShutdown()
+            is ScheduledEventCreateEvent -> this.onScheduledEventCreate(event)
+            is ScheduledEventUpdateStatusEvent -> this.onScheduledEventUpdateStatus(event)
         }
     }
 
     private suspend fun onReady() {
-        logger.info { "CasualBot has started!" }
+        this.logger.info { "CasualBot has started!" }
 
-        reloadCommands()
-        reloadEmbeds()
+        this.reloadCommands()
+        this.reloadEmbeds()
+        RegistrationPanel.reattach()
+    }
+
+    private suspend fun onAutoComplete(event: CommandAutoCompleteInteractionEvent) {
+        try {
+            this.commands[event.name]?.autocomplete(event)
+        } catch (e: Exception) {
+            this.logger.error(e) { "An error occurred completing ${event.name}" }
+        }
+    }
+
+    private suspend fun onButtonInteraction(event: ButtonInteractionEvent) {
+        try {
+            if (ConfirmInteractions.onButton(event)) {
+                return
+            }
+            PanelInteractions.onButton(event)
+        } catch (e: Exception) {
+            this.logger.error(e) { "An error occurred handling the button ${event.componentId}" }
+        }
+    }
+
+    private suspend fun onModalInteraction(event: ModalInteractionEvent) {
+        try {
+            if (EmbedInteractions.onModal(event)) {
+                return
+            }
+            PanelInteractions.onModal(event)
+        } catch (e: Exception) {
+            this.logger.error(e) { "An error occurred handling the modal ${event.modalId}" }
+        }
     }
 
     private suspend fun onScheduledEventCreate(event: ScheduledEventCreateEvent) {
@@ -159,19 +209,24 @@ object CasualBot : CoroutineEventListener {
         val time = event.scheduledEvent.startTime.toLocalDateTime()
         val unix = time.atZone(ZoneId.of("UTC")).toEpochSecond()
 
-        val statusChannelId = env.statusChannel
-        val embed = MessageCreateBuilder().setContent("@everyone").setEmbeds(EmbedUtil.nextEventEmbed(name, unix, desc)).build()
+        val statusChannelId = BotConfig.read { statusChannel }
+        if (statusChannelId != null) {
+            val embed = MessageCreateBuilder()
+                .setContent("@everyone")
+                .setEmbeds(EventEmbeds.nextEvent(name, unix, desc))
+                .build()
+            MessageUtil.editLastMessages(event.jda, statusChannelId, embed)
+        }
 
-        MessageUtil.editLastMessages(event.jda, statusChannelId, embed)
-
-        if (isTwisted()) {
+        if (this.state.twisted) {
             return
         }
 
-        for (team in database.getDiscordTeams()) {
+        val message = "You can now begin creating teams for the $name! Remember you **__do not__** need " +
+            "a full team in order to play. If you have any difficulties or questions feel free to ping " +
+            "Santa or Sensei!"
+        for (team in EventService.playingTeams()) {
             val teamChannelId = team.channelId ?: continue
-            val message =
-                "You can now begin creating teams for the ${event.scheduledEvent.name}! Remember you **__do not__** need a full team in order to play. If you have any difficulties or questions feel free to ping Santa or Sensei! "
             val teamChannel = event.jda.getTextChannelById(teamChannelId) ?: continue
             teamChannel.sendMessage(message).queue()
         }
@@ -181,59 +236,69 @@ object CasualBot : CoroutineEventListener {
         val status = event.newStatus
 
         if (status == ScheduledEvent.Status.COMPLETED) {
-            val channelId = env.statusChannel
-            val embed = MessageCreateBuilder().setEmbeds(EmbedUtil.noEventScheduledEmbed()).build()
+            val channelId = BotConfig.read { statusChannel } ?: return
+            val embed = MessageCreateBuilder().setEmbeds(EventEmbeds.noEventScheduled()).build()
             MessageUtil.editLastMessages(event.jda, channelId, embed)
         }
     }
 
-    private fun onMessageReceived(event: MessageReceivedEvent) {
-        if (event.channel.idLong == env.suggestionsChannel && event.author != jda.selfUser) {
-            val message = event.message
-            var title = message.contentRaw
-            if (title.length > 100) {
-                title = title.take(97) + "..."
-            }
-            message.createThreadChannel(title).queue()
-            message.addReaction(Emoji.fromUnicode("\uD83D\uDC4D")).queue()
-            message.addReaction(Emoji.fromUnicode("\uD83D\uDC4E")).queue()
-            event.channel.iterableHistory.find { it.author == jda.selfUser }?.delete()?.queue()
-            val suggestions = config.embedsByName("suggestions")?.asMessageCreateData()
-            if (suggestions != null) {
-                for (data in suggestions) {
-                    event.channel.sendMessage(data).queue()
-                }
-            }
+    private suspend fun onMessageReceived(event: MessageReceivedEvent) {
+        if (event.channel.idLong != BotConfig.read { suggestionsChannel } || event.author == this.jda.selfUser) {
+            return
         }
+
+        val message = event.message
+        var title = message.contentRaw
+        if (title.length > 100) {
+            title = title.take(97) + "..."
+        }
+        message.createThreadChannel(title).queue()
+        message.addReaction(Emoji.fromUnicode("\uD83D\uDC4D")).queue()
+        message.addReaction(Emoji.fromUnicode("\uD83D\uDC4E")).queue()
+
+        val suggestions = EmbedStore.group("suggestions") ?: return
+        val data = EmbedStore.toMessageData(suggestions)
+        event.channel.history.retrievePast(SUGGESTIONS_HISTORY).await()
+            .firstOrNull { it.author == this.jda.selfUser }
+            ?.delete()?.queue()
+        event.channel.sendMessage(data).queue()
     }
 
     private suspend fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        val command = commands[event.name] ?: return
-        val loading = event.loading()
+        val command = this.commands[event.name] ?: return
+        if (command.modal(event)) {
+            return
+        }
+        val loading = event.loading(command.ephemeral)
         try {
             command.execute(event, loading)
         } catch (e: Exception) {
             val message = when (e) {
-                is SocketTimeoutException -> "Error occurred while running command, is the database down? Check logs..."
-                else -> "Error occurred while running command, try the command again, otherwise please ping an admin"
+                is SocketTimeoutException -> "The database didn't respond. Check the logs, it may be down."
+                else -> "Try the command again. If it keeps failing, ping an admin."
             }
-            loading.replace(EmbedUtil.somethingWentWrongEmbed(message)).queue()
-            logger.error(e) { "An error occurred while running the command ${event.name}" }
+            loading.replaceQuietly(EventEmbeds.wentWrong(message))
+            this.logger.error(e) { "An error occurred while running the command ${event.name}" }
         } finally {
-            if (!loading.hasReplaced) {
-                loading.replace(EmbedUtil.somethingWentWrongEmbed("Message didn't get updated properly!!!")).queue()
+            if (!loading.replaced) {
+                loading.replaceQuietly(
+                    EventEmbeds.failure(
+                        "That didn't finish",
+                        "The command stopped before it could reply. Try it again, and ping an organizer if it keeps happening."
+                    )
+                )
             }
         }
     }
 
     private fun onShutdown() {
-        database.close()
+        this.database.close()
     }
 
     private fun createDatabase(): CasualDatabase {
-        val url = env.databaseUrl + getDatabaseName()
-        val username = env.databaseUsername
-        val password = env.databasePassword
+        val url = this.env.databaseUrl + this.getDatabaseName()
+        val username = this.env.databaseUsername
+        val password = this.env.databasePassword
         val database = CasualDatabase(url, username, password, DatabaseConfig {
             sqlLogger = object : SqlLogger {
                 override fun log(context: StatementContext, transaction: Transaction) {
@@ -242,11 +307,12 @@ object CasualBot : CoroutineEventListener {
             }
         })
         database.initialize()
+        database.initializeBotTables()
         return database
     }
 
     private fun createTeamWinsMessage(): MessageCreateData {
-        val teams = database.transaction {
+        val teams = this.database.transaction {
             DiscordTeam.all().orderBy(DiscordTeams.wins to SortOrder.DESC, DiscordTeams.name to SortOrder.ASC)
                 .filter { it.channelId != null }
                 .map { Named(it.name, FormattedStat.of(it.wins)) }

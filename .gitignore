@@ -32,3 +32,5 @@ teams.json
 casual_config.json
 
 .env
+bot-state.json
+bot-config.json

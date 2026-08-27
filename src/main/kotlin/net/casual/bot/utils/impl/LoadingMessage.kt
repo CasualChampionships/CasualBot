@@ -1,22 +1,22 @@
-package net.casual.bot.util.impl
+package net.casual.bot.utils.impl
 
+import dev.minn.jda.ktx.coroutines.await
 import dev.minn.jda.ktx.messages.editMessage
 import kotlinx.coroutines.future.await
+import net.casual.bot.CasualBot
 import net.dv8tion.jda.api.components.MessageTopLevelComponent
-import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.requests.RestAction
-import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction
 import net.dv8tion.jda.api.utils.AttachedFile
 import java.util.concurrent.CompletableFuture
 
 class LoadingMessage(private val future: CompletableFuture<InteractionHook>) {
-    var hasReplaced = false
+    var replaced = false
         private set
 
-    suspend fun replace(vararg embeds: MessageEmbed): WebhookMessageEditAction<Message> {
-        return this.replace(embeds = embeds.toList())
+    suspend fun replace(vararg embeds: MessageEmbed) {
+        this.replace(embeds = embeds.toList())
     }
 
     suspend fun replace(
@@ -24,20 +24,28 @@ class LoadingMessage(private val future: CompletableFuture<InteractionHook>) {
         embeds: Collection<MessageEmbed>? = null,
         components: Collection<MessageTopLevelComponent>? = null,
         attachments: Collection<AttachedFile>? = null
-    ): WebhookMessageEditAction<Message> {
-        this.hasReplaced = true
-        return future.await().editMessage(
+    ) {
+        future.await().editMessage(
             content = content,
             embeds = embeds,
             components = components,
             attachments = attachments,
             replace = true
-        )
+        ).await()
+        this.replaced = true
+    }
+
+    suspend fun replaceQuietly(vararg embeds: MessageEmbed) {
+        try {
+            this.replace(embeds = embeds.toList())
+        } catch (e: Exception) {
+            CasualBot.logger.error(e) { "Could not update the loading message" }
+        }
     }
 
     companion object {
         fun RestAction<InteractionHook>.loading(): LoadingMessage {
-            return LoadingMessage(this.submit())
+            return LoadingMessage(submit())
         }
     }
 }

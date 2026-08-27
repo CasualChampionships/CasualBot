@@ -13,7 +13,7 @@ class MinigameStatExpressions(
     private val expressions: Map<String, StatExpression>
 ) {
     fun get(name: String): StatExpression? {
-        return expressions[name]
+        return this.expressions[name]
     }
 
     fun types(): Set<String> {
@@ -21,7 +21,15 @@ class MinigameStatExpressions(
     }
 
     fun entries(): Iterable<Map.Entry<String, StatExpression>> {
-        return expressions.entries
+        return this.expressions.entries
+    }
+
+    companion object {
+        fun of(stats: MinigameStats, body: Builder.() -> Unit): MinigameStatExpressions {
+            val builder = Builder()
+            builder.body()
+            return builder.build(stats)
+        }
     }
 
     class Builder {

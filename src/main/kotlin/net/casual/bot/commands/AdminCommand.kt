@@ -4,9 +4,9 @@ import dev.minn.jda.ktx.interactions.commands.option
 import dev.minn.jda.ktx.interactions.commands.subcommand
 import dev.minn.jda.ktx.interactions.components.getOption
 import net.casual.bot.CasualBot
-import net.casual.bot.util.CommandUtils.isOrganizer
-import net.casual.bot.util.EmbedUtil
-import net.casual.bot.util.impl.LoadingMessage
+import net.casual.bot.utils.CommandUtils.isOrganizer
+import net.casual.bot.utils.EventEmbeds
+import net.casual.bot.utils.impl.LoadingMessage
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 
@@ -26,25 +26,25 @@ object AdminCommand : Command {
 
     override suspend fun execute(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         if (!command.isOrganizer()) {
-            loading.replace(EmbedUtil.somethingWentWrongEmbed("Event registration is closed. You cannot join, leave, or participate.")).queue()
+            loading.replace(EventEmbeds.organizersOnly())
             return
         }
 
         when (command.subcommandName) {
-            "dev" -> setDevMode(command, loading)
-            "twisted" -> setTwistedMode(command, loading)
+            "dev" -> this.setDevMode(command, loading)
+            "twisted" -> this.setTwistedMode(command, loading)
         }
     }
 
     private suspend fun setDevMode(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         val dev = command.getOption<Boolean>("is-dev")!!
-        CasualBot.modifyConfig(dev = dev)
-        loading.replace("Dev set to: $dev").queue()
+        CasualBot.modifyState(dev = dev)
+        loading.replace("Dev set to: $dev")
     }
 
     private suspend fun setTwistedMode(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         val twisted = command.getOption<Boolean>("is-twisted")!!
-        CasualBot.modifyConfig(twisted = twisted)
-        loading.replace("Twisted set to: $twisted").queue()
+        CasualBot.modifyState(twisted = twisted)
+        loading.replace("Twisted set to: $twisted")
     }
 }

@@ -1,4 +1,4 @@
-package net.casual.bot.util
+package net.casual.bot.utils
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -16,7 +16,7 @@ object DatabaseUtils {
     private val mojank = CachedMojank(endpoints = MojankEndpoints.ALTERNATE)
 
     suspend fun getSimpleMojangProfile(username: String): MojankResult<SimpleMojankProfile> {
-        return mojank.attempt(3) {
+        return this.mojank.attempt(3) {
             usernameToSimpleProfile(username)
         }
     }
@@ -36,8 +36,8 @@ object DatabaseUtils {
         }
         return transaction {
             DiscordPlayer.new(profile.id) {
-                name = profile.name
-                team = null
+                this.name = profile.name
+                this.team = null
             }
         }
     }
@@ -52,8 +52,8 @@ object DatabaseUtils {
         }.getOrNull() ?: return null
         return transaction {
             DiscordPlayer.new(uuid) {
-                name = username
-                team = null
+                this.name = username
+                this.team = null
             }
         }
     }
