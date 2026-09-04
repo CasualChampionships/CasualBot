@@ -1,17 +1,21 @@
 package net.casual.bot.database
 
+import net.casual.bot.CasualBot
 import net.casual.database.CasualDatabase
 import net.casual.database.DiscordPlayer
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.update
 
 object BotDatabase {
     fun CasualDatabase.initializeBotTables() {
         transaction {
             SchemaUtils.create(BotEvents, BotRegistrations, BotPlayerLinks)
+            Migrations.migrate()
         }
     }
 
@@ -20,6 +24,12 @@ object BotDatabase {
             BotEvent.find { BotEvents.archived eq false }
                 .orderBy(BotEvents.id to SortOrder.DESC)
                 .firstOrNull()
+        }
+    }
+
+    fun CasualDatabase.latestEvent(): BotEvent? {
+        return transaction {
+            BotEvent.all().orderBy(BotEvents.id to SortOrder.DESC).firstOrNull()
         }
     }
 
@@ -61,6 +71,23 @@ object BotDatabase {
                 this.discordId = discordId
                 this.player = player
                 this.linkedAt = now
+            }
+        }
+    }
+
+    private object Migrations {
+        private const val REMOVED_LOCKED_STATE = "Locked"
+
+        private object LegacyEventStates: Table(BotEvents.tableName) {
+            val state = varchar("state", 16)
+        }
+
+        fun migrate() {
+            val moved = LegacyEventStates.update({ LegacyEventStates.state eq REMOVED_LOCKED_STATE }) {
+                it[LegacyEventStates.state] = EventState.Closed.name
+            }
+            if (moved > 0) {
+                CasualBot.logger.info { "Moved $moved event(s) out of the removed $REMOVED_LOCKED_STATE state" }
             }
         }
     }

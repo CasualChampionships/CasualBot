@@ -215,7 +215,8 @@ object TeamCommand: Command {
             return
         }
 
-        val activeEvent = this.requireActiveEvent(loading) ?: return
+        val organizer = event.isOrganizer()
+        val target = this.requireEvent(loading, organizer) ?: return
         if (!event.canModifyTeam(team)) {
             loading.replace(this.notOnTeam(team))
             return
@@ -223,27 +224,30 @@ object TeamCommand: Command {
 
         val player = CommandUtils.getPlayer(event, loading) ?: return
         val user = event.getOption<User>("user")
-        loading.replace(EventEmbeds.add(EventService.addPlayer(player, team, user?.idLong)))
-        RegistrationPanel.refresh(activeEvent)
+        loading.replace(
+            EventEmbeds.add(EventService.addPlayer(player, team, user?.idLong, organizer),)
+        )
+        RegistrationPanel.refresh(target)
     }
 
     private suspend fun removePlayer(event: GenericCommandInteractionEvent, loading: LoadingMessage) {
         val player = CommandUtils.getPlayer(event, loading) ?: return
-        val activeEvent = this.requireActiveEvent(loading) ?: return
+        val organizer = event.isOrganizer()
+        val target = this.requireEvent(loading, organizer) ?: return
 
-        val registration = CasualBot.database.registrationOf(activeEvent, player)
+        val registration = CasualBot.database.registrationOf(target, player)
         val team = registration?.let { CasualBot.database.transaction { it.team } }
         if (team != null && !event.canModifyTeam(team)) {
             loading.replace(this.notOnTeam(team))
             return
         }
-        if (team == null && !event.isOrganizer()) {
+        if (team == null && !organizer) {
             loading.replace(EventEmbeds.organizersOnly())
             return
         }
 
-        loading.replace(EventEmbeds.remove(EventService.removePlayer(player)))
-        RegistrationPanel.refresh(activeEvent)
+        loading.replace(EventEmbeds.remove(EventService.removePlayer(player, organizer)))
+        RegistrationPanel.refresh(target)
     }
 
     private suspend fun clearTeam(event: GenericCommandInteractionEvent, loading: LoadingMessage) {
@@ -253,7 +257,7 @@ object TeamCommand: Command {
             return
         }
 
-        val activeEvent = this.requireActiveEvent(loading) ?: return
+        val target = this.requireEvent(loading, event.isOrganizer()) ?: return
         if (!event.canModifyTeam(team)) {
             loading.replace(this.notOnTeam(team))
             return
@@ -261,7 +265,7 @@ object TeamCommand: Command {
 
         val cleared = CasualBot.database.transaction {
             val registrations = Registration.find {
-                (BotRegistrations.event eq activeEvent.id) and (BotRegistrations.team eq team.id)
+                (BotRegistrations.event eq target.id) and (BotRegistrations.team eq team.id)
             }.toList()
             registrations.forEach { it.delete() }
             registrations.size
@@ -273,7 +277,7 @@ object TeamCommand: Command {
                 "$cleared registration(s) removed"
             )
         )
-        RegistrationPanel.refresh(activeEvent)
+        RegistrationPanel.refresh(target)
     }
 
     private suspend fun teamInfo(event: GenericCommandInteractionEvent, loading: LoadingMessage) {
@@ -286,7 +290,7 @@ object TeamCommand: Command {
     }
 
     private suspend fun syncRoles(event: GenericCommandInteractionEvent, loading: LoadingMessage) {
-        val activeEvent = this.requireActiveEvent(loading) ?: return
+        val activeEvent = this.requireEvent(loading, false) ?: return
 
         val holders = CommandUtils.roleHolders()
         if (holders == null) {
@@ -298,12 +302,12 @@ object TeamCommand: Command {
         loading.replace(EventEmbeds.drift(activeEvent, drift))
     }
 
-    private suspend fun requireActiveEvent(loading: LoadingMessage): BotEvent? {
-        val activeEvent = EventService.activeEvent()
-        if (activeEvent == null) {
+    private suspend fun requireEvent(loading: LoadingMessage, organizer: Boolean): BotEvent? {
+        val resolved = EventService.editableEvent(organizer)
+        if (resolved == null) {
             loading.replace(EventEmbeds.noActiveEvent())
         }
-        return activeEvent
+        return resolved
     }
 
     private fun membersUnavailable(): MessageEmbed {

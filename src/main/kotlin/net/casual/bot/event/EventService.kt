@@ -9,6 +9,7 @@ import net.casual.bot.database.EventState
 import net.casual.bot.database.Registration
 import net.casual.bot.database.BotRegistrations
 import net.casual.bot.database.BotDatabase.activeEvent
+import net.casual.bot.database.BotDatabase.latestEvent
 import net.casual.bot.database.BotDatabase.linkPlayer
 import net.casual.bot.database.BotDatabase.linkedDiscordId
 import net.casual.bot.database.BotDatabase.linkedPlayer
@@ -23,6 +24,14 @@ import java.time.Instant
 object EventService {
     fun activeEvent(): BotEvent? {
         return CasualBot.database.activeEvent()
+    }
+
+    fun latestEvent(): BotEvent? {
+        return CasualBot.database.latestEvent()
+    }
+
+    fun editableEvent(force: Boolean): BotEvent? {
+        return if (force) this.latestEvent() else this.activeEvent()
     }
 
     fun createEvent(name: String, mode: EventMode, teamSize: Int): BotEvent {
@@ -270,9 +279,14 @@ object EventService {
         }
     }
 
-    fun addPlayer(player: DiscordPlayer, team: DiscordTeam?, discordId: Long? = null): AddResult {
-        val event = this.activeEvent() ?: return EventUnavailable.NoActiveEvent
-        if (!event.acceptingRegistrations) {
+    fun addPlayer(
+        player: DiscordPlayer,
+        team: DiscordTeam?,
+        discordId: Long? = null,
+        force: Boolean = false
+    ): AddResult {
+        val event = this.editableEvent(force) ?: return EventUnavailable.NoActiveEvent
+        if (!force && !event.acceptingRegistrations) {
             return EventUnavailable.NotAccepting(event.state, event.archived)
         }
         if (team != null && this.isSpectatorTeam(team)) {
@@ -333,8 +347,8 @@ object EventService {
         return result
     }
 
-    fun removePlayer(player: DiscordPlayer): RemoveResult {
-        val event = this.activeEvent() ?: return EventUnavailable.NoActiveEvent
+    fun removePlayer(player: DiscordPlayer, force: Boolean = false): RemoveResult {
+        val event = this.editableEvent(force) ?: return EventUnavailable.NoActiveEvent
         val registration = CasualBot.database.registrationOf(event, player)
             ?: return RemoveResult.NotRegistered(player.name)
 
@@ -361,10 +375,6 @@ object EventService {
         if (event.mode != EventMode.Randomized) {
             return AllocateResult.WrongMode(event)
         }
-        if (event.state == EventState.Locked) {
-            return AllocateResult.AlreadyLocked(event)
-        }
-
         val teams = this.playingTeams()
         if (teams.isEmpty()) {
             return AllocateResult.NoTeams
@@ -397,33 +407,6 @@ object EventService {
                 unallocated.map { it.second.name }
             )
         }
-    }
-
-    fun lock(): LockResult {
-        val event = this.activeEvent() ?: return EventUnavailable.NoActiveEvent
-        if (event.state == EventState.Locked) {
-            return LockResult.AlreadyLocked
-        }
-
-        val registrations = CasualBot.database.transaction { playing(event) }
-        if (registrations.isEmpty()) {
-            return LockResult.NoPlayers
-        }
-
-        val unallocated = CasualBot.database.transaction { registrations.count { it.team == null } }
-        if (unallocated > 0) {
-            return LockResult.Unallocated(unallocated)
-        }
-
-        val teams = CasualBot.database.transaction {
-            registrations.mapNotNull { it.team }.distinctBy { it.id }.size
-        }
-
-        CasualBot.database.transaction {
-            event.state = EventState.Locked
-            event.lockedAt = Instant.now().epochSecond
-        }
-        return LockResult.Locked(teams, registrations.size)
     }
 
     fun summarise(event: BotEvent): EventSummary {

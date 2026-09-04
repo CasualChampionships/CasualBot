@@ -39,7 +39,7 @@ sealed interface SpectateResult {
 
 sealed interface EventUnavailable:
     RegisterResult, LeaveResult, SpectateResult, JoinResult,
-    AllocateResult, LockResult, AddResult, RemoveResult {
+    AllocateResult, AddResult, RemoveResult {
     data object NoActiveEvent: EventUnavailable
     data class NotAccepting(val state: EventState, val archived: Boolean): EventUnavailable
 }
@@ -85,17 +85,9 @@ sealed interface AllocateResult {
     data class WrongMode(val event: BotEvent): AllocateResult
     data object NoPlayers: AllocateResult
     data object NoTeams: AllocateResult
-    data class AlreadyLocked(val event: BotEvent): AllocateResult
 }
 
 data class AllocatedTeam(val team: DiscordTeam, val players: List<DiscordPlayer>)
-
-sealed interface LockResult {
-    data class Locked(val teams: Int, val players: Int): LockResult
-    data object AlreadyLocked: LockResult
-    data class Unallocated(val count: Int): LockResult
-    data object NoPlayers: LockResult
-}
 
 data class TeamRoster(
     val team: DiscordTeam,

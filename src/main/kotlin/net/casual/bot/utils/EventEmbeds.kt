@@ -9,7 +9,6 @@ import net.casual.bot.event.AllocateResult
 import net.casual.bot.event.Drift
 import net.casual.bot.event.EventSummary
 import net.casual.bot.event.JoinResult
-import net.casual.bot.event.LockResult
 import net.casual.bot.event.EventUnavailable
 import net.casual.bot.event.LeaveResult
 import net.casual.bot.event.RegisterResult
@@ -40,7 +39,6 @@ object EventEmbeds {
         return when (event.state) {
             EventState.Open -> "Registration open"
             EventState.Closed -> "Registration closed"
-            EventState.Locked -> "Teams locked"
         }
     }
 
@@ -144,9 +142,6 @@ object EventEmbeds {
                 result.archived -> this.failure(
                     "That event has finished",
                     "Watch for the next one to be announced."
-                )
-                result.state == EventState.Locked -> this.teamsLocked(
-                    "Registration closed and the rosters have been sent to the server."
                 )
                 else -> this.failure(
                     "Registration is closed",
@@ -289,9 +284,6 @@ object EventEmbeds {
             )
             AllocateResult.NoPlayers -> this.failure("Nobody has registered", "There's nobody to put on a team.")
             AllocateResult.NoTeams -> this.failure("There are no teams", "Create some with `/team create` first.")
-            is AllocateResult.AlreadyLocked -> this.teamsLocked(
-                "**${this.escape(result.event.name)}** has already been handed to the server."
-            )
             is EventUnavailable -> this.unavailable(result)
         }
     }
@@ -302,7 +294,7 @@ object EventEmbeds {
                 title = "You're on ${escape(result.team.name)}"
                 color = SUCCESS
                 description = if (result.previous == null) {
-                    "Anyone can move between teams until the rosters are locked."
+                    "Anyone can move between teams while registration is open."
                 } else {
                     "You've left **${escape(result.previous.name)}**."
                 }
@@ -396,25 +388,6 @@ object EventEmbeds {
         }
     }
 
-    fun lock(result: LockResult): MessageEmbed {
-        return when (result) {
-            is LockResult.Locked -> Embed {
-                title = "Teams locked"
-                color = SUCCESS
-                description = "**${result.players}** players across **${result.teams}** teams " +
-                    "have been written to the event tables."
-            }
-            LockResult.AlreadyLocked -> this.notice("Already locked", "Nothing changed.")
-            is LockResult.Unallocated -> this.failure(
-                "Some players have no team",
-                "**${result.count}** registered player(s) aren't on a team yet. " +
-                    "Run `/event allocate`, or put them on a team, before locking."
-            )
-            LockResult.NoPlayers -> this.failure("Nobody has registered", "There's nothing to lock.")
-            is EventUnavailable -> this.unavailable(result)
-        }
-    }
-
     fun noStats(username: String): MessageEmbed {
         return this.failure(
             "No statistics for ${this.escape(username)}",
@@ -494,10 +467,6 @@ object EventEmbeds {
 
     fun spectatorTeam(team: DiscordTeam, detail: String): MessageEmbed {
         return this.failure("${this.escape(team.name)} isn't a team you join", detail)
-    }
-
-    fun teamsLocked(detail: String): MessageEmbed {
-        return this.failure("Teams are locked", detail)
     }
 
     fun eventFull(): MessageEmbed {

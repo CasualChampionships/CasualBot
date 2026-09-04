@@ -13,8 +13,7 @@ enum class EventMode {
 
 enum class EventState {
     Open,
-    Closed,
-    Locked
+    Closed
 }
 
 object BotEvents: IntIdTable() {
@@ -28,7 +27,6 @@ object BotEvents: IntIdTable() {
 
     val archived = bool("archived").default(false)
     val createdAt = long("created_at")
-    val lockedAt = long("locked_at").nullable()
 }
 
 object BotRegistrations: IntIdTable() {

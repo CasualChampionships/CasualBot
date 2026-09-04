@@ -47,7 +47,6 @@ object EventCommand: Command {
         command.subcommand("allocate", "Draw random teams") {
             option<Boolean>("preview", "Show the draw without saving it. Defaults to true")
         }
-        command.subcommand("lock", "Freeze the rosters and hand them to the server")
         command.subcommand("panel", "Post the registration panel in this channel")
         command.subcommand("end", "Finish the event")
     }
@@ -66,7 +65,6 @@ object EventCommand: Command {
             "open" -> this.changeState(EventState.Open, loading)
             "close" -> this.changeState(EventState.Closed, loading)
             "allocate" -> this.allocate(command, loading)
-            "lock" -> this.lock(loading)
             "panel" -> this.postPanel(command, loading)
             "end" -> this.endEvent(command, loading)
         }
@@ -119,14 +117,17 @@ object EventCommand: Command {
         }
 
         val user = command.getOption<User>("user")
-        loading.replace(EventEmbeds.add(EventService.addPlayer(player, team, user?.idLong)))
-        EventService.activeEvent()?.let { RegistrationPanel.refresh(it) }
+        val event = EventService.latestEvent()
+        loading.replace(
+            EventEmbeds.add(EventService.addPlayer(player, team, user?.idLong, force = true))
+        )
+        event?.let { RegistrationPanel.refresh(it) }
     }
 
     private suspend fun unregisterOther(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         val player = CommandUtils.getPlayer(command, loading) ?: return
-        loading.replace(EventEmbeds.remove(EventService.removePlayer(player)))
-        EventService.activeEvent()?.let { RegistrationPanel.refresh(it) }
+        loading.replace(EventEmbeds.remove(EventService.removePlayer(player, force = true)))
+        EventService.latestEvent()?.let { RegistrationPanel.refresh(it) }
     }
 
     private suspend fun showStatus(loading: LoadingMessage) {
@@ -150,11 +151,6 @@ object EventCommand: Command {
             loading.replace(EventEmbeds.noActiveEvent())
             return
         }
-        if (event.state == EventState.Locked) {
-            loading.replace(EventEmbeds.teamsLocked("Rosters have already been handed to the server."))
-            return
-        }
-
         EventService.setState(event, state)
         RegistrationPanel.refresh(event)
 
@@ -193,15 +189,6 @@ object EventCommand: Command {
             RegistrationPanel.refresh(event)
         }
         loading.replace(EventEmbeds.allocate(result, applied = true))
-    }
-
-    private suspend fun lock(loading: LoadingMessage) {
-        val result = EventService.lock()
-        val event = EventService.activeEvent()
-        if (event != null) {
-            RegistrationPanel.refresh(event)
-        }
-        loading.replace(EventEmbeds.lock(result))
     }
 
     private suspend fun postPanel(command: GenericCommandInteractionEvent, loading: LoadingMessage) {

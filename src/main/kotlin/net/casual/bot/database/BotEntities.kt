@@ -17,7 +17,6 @@ class BotEvent(id: EntityID<Int>): IntEntity(id) {
 
     var archived by BotEvents.archived
     var createdAt by BotEvents.createdAt
-    var lockedAt by BotEvents.lockedAt
 
     val registrations by Registration referrersOn BotRegistrations.event
 
