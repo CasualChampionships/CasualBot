@@ -25,22 +25,7 @@ data class Env(
     @SerialName("GUILD_ID")
     val guildId: Long = 0,
     @SerialName("ORGANIZER_ID")
-    val organizerId: Long = 0L,
-    @SerialName("WINS_CHANNEL_ID")
-    @Deprecated("Moved to BotConfig")
-    val winsChannel: Long = 0,
-    @SerialName("SUGGESTIONS_CHANNEL_ID")
-    @Deprecated("Moved to BotConfig")
-    val suggestionsChannel: Long = 0,
-    @SerialName("STATUS_CHANNEL_ID")
-    @Deprecated("Moved to BotConfig")
-    val statusChannel: Long = 0,
-    @SerialName("INFO_CHANNEL_ID")
-    @Deprecated("Moved to BotConfig")
-    val infoChannel: Long = 0,
-    @SerialName("RULES_CHANNEL_ID")
-    @Deprecated("Moved to BotConfig")
-    val rulesChannel: Long = 0,
+    val organizerId: Long = 0L
 ) {
     companion object {
         @OptIn(ExperimentalSerializationApi::class)

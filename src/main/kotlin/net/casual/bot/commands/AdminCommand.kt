@@ -38,13 +38,24 @@ object AdminCommand : Command {
 
     private suspend fun setDevMode(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         val dev = command.getOption<Boolean>("is-dev")!!
-        CasualBot.modifyState(dev = dev)
-        loading.replace("Dev set to: $dev")
+        this.report(loading, "Dev", dev, CasualBot.modifyState(dev = dev))
     }
 
     private suspend fun setTwistedMode(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         val twisted = command.getOption<Boolean>("is-twisted")!!
-        CasualBot.modifyState(twisted = twisted)
-        loading.replace("Twisted set to: $twisted")
+        this.report(loading, "Twisted", twisted, CasualBot.modifyState(twisted = twisted))
+    }
+
+    private suspend fun report(loading: LoadingMessage, name: String, value: Boolean, written: Boolean) {
+        if (written) {
+            loading.replace("$name set to: $value")
+            return
+        }
+        loading.replace(
+            EventEmbeds.failure(
+                "$name set to: $value, but not saved",
+                "The state file could not be written, so this will be lost on the next restart. Check the logs."
+            )
+        )
     }
 }

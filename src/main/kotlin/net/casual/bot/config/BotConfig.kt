@@ -7,6 +7,7 @@ import kotlinx.serialization.json.decodeFromStream
 import kotlinx.serialization.json.encodeToStream
 import net.casual.bot.CasualBot
 import java.nio.file.Path
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 import kotlin.io.path.inputStream
 import kotlin.io.path.moveTo
@@ -58,17 +59,23 @@ object BotConfig {
     private var data = BotConfigData()
 
     @OptIn(ExperimentalSerializationApi::class)
-    fun load(env: Env, legacy: LegacyConfig) {
+    fun load() {
         synchronized(this) {
             if (this.path.exists()) {
                 try {
                     this.data = this.path.inputStream().use { this.json.decodeFromStream(it) }
-                    return
+                    CasualBot.logger.info { "Loaded config from ${this.path.absolutePathString()}" }
                 } catch (e: Exception) {
-                    CasualBot.logger.error(e) { "Failed to read $path, falling back to the legacy config" }
+                    this.data = BotConfigData()
+                    CasualBot.logger.error(e) {
+                        "Failed to read ${this.path.absolutePathString()}, using an empty config"
+                    }
                 }
+                return
             }
-            this.data = this.fromLegacy(env, legacy)
+
+            this.data = BotConfigData()
+            CasualBot.logger.warn { "No config at ${this.path.absolutePathString()}, creating an empty one" }
             this.write()
         }
     }
@@ -107,43 +114,7 @@ object BotConfig {
             temporary.outputStream().use { this.json.encodeToStream(this.data, it) }
             temporary.moveTo(this.path, overwrite = true)
         } catch (e: Exception) {
-            CasualBot.logger.error(e) { "Failed to write $path" }
+            CasualBot.logger.error(e) { "Failed to write ${this.path.absolutePathString()}" }
         }
-    }
-
-    @Deprecated("Migrating away from LegacyConfig")
-    private fun fromLegacy(env: Env, legacy: LegacyConfig): BotConfigData {
-        val migrated = BotConfigData()
-
-        migrated.winsChannel = env.winsChannel.takeIf { it != 0L }
-        migrated.suggestionsChannel = env.suggestionsChannel.takeIf { it != 0L }
-        migrated.statusChannel = env.statusChannel.takeIf { it != 0L }
-
-        val legacyChannels = mapOf(
-            "info" to env.infoChannel,
-            "faq" to env.infoChannel,
-            "rules" to env.rulesChannel
-        )
-        val ordered = legacy.embeds.sortedBy {
-            when (it.name) {
-                "info" -> 0
-                "faq" -> 1
-                else -> 2
-            }
-        }
-        for (group in ordered) {
-            migrated.groups.add(
-                EmbedGroupData(
-                    group.name,
-                    group.title,
-                    legacyChannels[group.name]?.takeIf { it != 0L },
-                    group.embeds.mapTo(ArrayList()) {
-                        EmbedBlockData(it.title.take(256), it.description, it.color)
-                    },
-                    group.images.toMutableList()
-                )
-            )
-        }
-        return migrated
     }
 }

@@ -12,7 +12,6 @@ import io.ktor.client.engine.cio.*
 import net.casual.bot.commands.*
 import net.casual.bot.config.BotConfig
 import net.casual.bot.config.BotState
-import net.casual.bot.config.LegacyConfig
 import net.casual.bot.config.Env
 import net.casual.bot.database.BotDatabase.initializeBotTables
 import net.casual.bot.panel.PanelInteractions
@@ -63,16 +62,14 @@ object CasualBot : CoroutineEventListener {
     val logger = KotlinLogging.logger("CasualBot")
     val httpClient = HttpClient(CIO)
 
-    private var legacyConfig = LegacyConfig.read()
-
     var env = Env.read()
         private set
 
-    var state = BotState.read(this.legacyConfig)
+    var state = BotState.read()
         private set
 
     init {
-        BotConfig.load(this.env, this.legacyConfig)
+        BotConfig.load()
     }
 
     var database = this.createDatabase()
@@ -103,10 +100,11 @@ object CasualBot : CoroutineEventListener {
         
     }
 
-    fun modifyState(dev: Boolean = this.state.dev, twisted: Boolean = this.state.twisted) {
+    fun modifyState(dev: Boolean = this.state.dev, twisted: Boolean = this.state.twisted): Boolean {
         this.state = this.state.copy(dev = dev, twisted = twisted)
-        BotState.write(this.state)
+        val written = BotState.write(this.state)
         this.reloadDatabase()
+        return written
     }
 
     fun getDatabaseName(): String {
@@ -115,7 +113,7 @@ object CasualBot : CoroutineEventListener {
     }
 
     fun reloadConfig() {
-        BotConfig.load(this.env, this.legacyConfig)
+        BotConfig.load()
     }
 
     fun reloadDatabase() {
