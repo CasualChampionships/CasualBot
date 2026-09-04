@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "net.casual"
-version = "1.0.1"
+version = "1.0.2"
 
 application.mainClass.set("net.casual.bot.CasualBot")
 
@@ -43,6 +43,14 @@ dependencies {
     implementation(libs.ktor.cio)
     implementation(libs.ktor.serialization)
     implementation(libs.ktor.negotiation)
+}
+
+tasks.processResources {
+    val properties = mapOf("version" to project.version)
+    inputs.properties(properties)
+    filesMatching("bot.properties") {
+        expand(properties)
+    }
 }
 
 tasks.shadowJar {

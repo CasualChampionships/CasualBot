@@ -5,6 +5,7 @@ import dev.minn.jda.ktx.interactions.commands.subcommand
 import dev.minn.jda.ktx.interactions.components.getOption
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
+import net.casual.bot.BotVersion
 import net.casual.bot.CasualBot
 import net.casual.bot.utils.CommandUtils.isOrganizer
 import net.casual.bot.event.EventService
@@ -140,6 +141,9 @@ object ConfigCommand: Command {
                 append("- Schema: `${CasualBot.getDatabaseName()}`\n")
                 append("- Dev: **${CasualBot.state.dev}**\n")
                 append("- Twisted: **${CasualBot.state.twisted}**\n")
+
+                append("\n**Bot**\n")
+                append("- Version: `${BotVersion.version}`\n")
             }.take(MessageEmbed.DESCRIPTION_MAX_LENGTH)
         }
     }

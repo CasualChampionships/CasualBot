@@ -165,7 +165,7 @@ object CasualBot : CoroutineEventListener {
     }
 
     private suspend fun onReady() {
-        this.logger.info { "CasualBot has started!" }
+        this.logger.info { "CasualBot (${BotVersion.version}) has started!" }
 
         this.reloadCommands()
         this.reloadEmbeds()
