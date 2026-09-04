@@ -409,6 +409,16 @@ object EventService {
         }
     }
 
+    fun registeredPlayers(event: BotEvent): RegisteredPlayers {
+        return CasualBot.database.transaction {
+            val registrations = event.registrations.toList()
+            RegisteredPlayers(
+                registrations.filter { !it.spectating }.map { it.player.name }.sorted(),
+                registrations.filter { it.spectating }.map { it.player.name }.sorted()
+            )
+        }
+    }
+
     fun summarise(event: BotEvent): EventSummary {
         return CasualBot.database.transaction {
             val registrations = event.registrations.toList()

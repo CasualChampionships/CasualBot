@@ -89,6 +89,10 @@ sealed interface AllocateResult {
 
 data class AllocatedTeam(val team: DiscordTeam, val players: List<DiscordPlayer>)
 
+data class RegisteredPlayers(val playing: List<String>, val spectating: List<String>) {
+    val total: Int get() = this.playing.size + this.spectating.size
+}
+
 data class TeamRoster(
     val team: DiscordTeam,
     val members: List<String>,

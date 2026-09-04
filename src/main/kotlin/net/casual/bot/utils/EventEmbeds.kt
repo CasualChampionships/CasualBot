@@ -11,6 +11,7 @@ import net.casual.bot.event.EventSummary
 import net.casual.bot.event.JoinResult
 import net.casual.bot.event.EventUnavailable
 import net.casual.bot.event.LeaveResult
+import net.casual.bot.event.RegisteredPlayers
 import net.casual.bot.event.RegisterResult
 import net.casual.bot.event.RemoveResult
 import net.casual.bot.event.SpectateResult
@@ -195,6 +196,19 @@ object EventEmbeds {
                             roster.members.joinToString("\n") { "| ${escape(it)}" }
                     })
                 }
+            }.take(MessageEmbed.DESCRIPTION_MAX_LENGTH)
+        }
+    }
+
+    fun players(event: BotEvent, players: RegisteredPlayers): MessageEmbed {
+        return Embed {
+            title = escape(event.name)
+            color = NEUTRAL
+            description = buildString {
+                append(header(event))
+                append("**${players.total}** signed up\n")
+                append(nameBlock("Playing", players.playing))
+                append(nameBlock("Spectating", players.spectating))
             }.take(MessageEmbed.DESCRIPTION_MAX_LENGTH)
         }
     }
@@ -491,6 +505,13 @@ object EventEmbeds {
             color = NEUTRAL
             description = detail
         }
+    }
+
+    private fun nameBlock(heading: String, names: List<String>): String {
+        if (names.isNotEmpty()) {
+            return "\n**$heading** (${names.size})\n```\n${names.joinToString("\n")}\n```"
+        }
+        return ""
     }
 
     private fun header(event: BotEvent): String {

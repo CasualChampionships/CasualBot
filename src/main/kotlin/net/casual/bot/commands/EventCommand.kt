@@ -42,6 +42,7 @@ object EventCommand: Command {
             CommandUtils.addPlayerOption(this)
         }
         command.subcommand("status", "Show the current event")
+        command.subcommand("players", "List the usernames of everyone who has signed up")
         command.subcommand("open", "Open registration")
         command.subcommand("close", "Close registration")
         command.subcommand("allocate", "Draw random teams") {
@@ -62,6 +63,7 @@ object EventCommand: Command {
             "register" -> this.registerOther(command, loading)
             "unregister" -> this.unregisterOther(command, loading)
             "status" -> this.showStatus(loading)
+            "players" -> this.showPlayers(loading)
             "open" -> this.changeState(EventState.Open, loading)
             "close" -> this.changeState(EventState.Closed, loading)
             "allocate" -> this.allocate(command, loading)
@@ -143,6 +145,26 @@ object EventCommand: Command {
             listOf()
         }
         loading.replace(EventEmbeds.status(summary, drift))
+    }
+
+    private suspend fun showPlayers(loading: LoadingMessage) {
+        val event = EventService.latestEvent()
+        if (event == null) {
+            loading.replace(EventEmbeds.noActiveEvent())
+            return
+        }
+
+        val players = EventService.registeredPlayers(event)
+        if (players.total == 0) {
+            loading.replace(
+                EventEmbeds.notice(
+                    "Nobody has signed up",
+                    "No one is registered for **${EventEmbeds.escape(event.name)}** yet"
+                )
+            )
+            return
+        }
+        loading.replace(EventEmbeds.players(event, players))
     }
 
     private suspend fun changeState(state: EventState, loading: LoadingMessage) {
