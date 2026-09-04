@@ -250,9 +250,9 @@ object EventService {
         return SpectateResult.Spectating(wasPlaying)
     }
 
-    fun join(discordId: Long, team: DiscordTeam): JoinResult {
+    fun join(discordId: Long, team: DiscordTeam, force: Boolean = false): JoinResult {
         val event = this.activeEvent() ?: return EventUnavailable.NoActiveEvent
-        if (!event.acceptingRegistrations) {
+        if (!force && !event.acceptingRegistrations) {
             return EventUnavailable.NotAccepting(event.state, event.archived)
         }
         if (event.mode != EventMode.Manual) {

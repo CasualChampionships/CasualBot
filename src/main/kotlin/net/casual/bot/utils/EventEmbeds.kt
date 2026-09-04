@@ -382,7 +382,7 @@ object EventEmbeds {
                 if (result.team == null) {
                     "They're no longer registered for the event."
                 } else {
-                    "They're off **${this.escape(result.team.name)}** and no longer registered."
+                    "They've been removed from **${this.escape(result.team.name)}** and are no longer registered."
                 }
             )
             is RemoveResult.NotRegistered -> this.notice(

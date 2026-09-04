@@ -203,7 +203,7 @@ object TeamCommand: Command {
             return
         }
 
-        val result = EventService.join(event.user.idLong, team)
+        val result = EventService.join(event.user.idLong, team, event.isOrganizer())
         loading.replace(EventEmbeds.join(result))
         EventService.activeEvent()?.let { RegistrationPanel.refresh(it) }
     }
@@ -225,7 +225,7 @@ object TeamCommand: Command {
         val player = CommandUtils.getPlayer(event, loading) ?: return
         val user = event.getOption<User>("user")
         loading.replace(
-            EventEmbeds.add(EventService.addPlayer(player, team, user?.idLong, organizer),)
+            EventEmbeds.add(EventService.addPlayer(player, team, user?.idLong, organizer))
         )
         RegistrationPanel.refresh(target)
     }
