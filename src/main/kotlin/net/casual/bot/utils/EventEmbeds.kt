@@ -188,7 +188,7 @@ object EventEmbeds {
                     append("\n\n")
                     append(filled.joinToString("\n\n") { roster ->
                         "**${escape(roster.team.name)}** (${roster.members.size}/${roster.capacity})\n" +
-                            roster.members.joinToString("\n") { "| ${escape(it)}" }
+                            roster.members.joinToString("\n") { "- ${escape(it)}" }
                     })
                 }
             }.take(MessageEmbed.DESCRIPTION_MAX_LENGTH)
@@ -270,11 +270,11 @@ object EventEmbeds {
                 description = buildString {
                     append(result.teams.joinToString("\n\n") { allocated ->
                         "**${escape(allocated.team.name)}** (${allocated.players.size})\n" +
-                            allocated.players.joinToString("\n") { "| ${escape(it.name)}" }
+                            allocated.players.joinToString("\n") { "- ${escape(it.name)}" }
                     })
                     if (result.unallocated.isNotEmpty()) {
                         append("\n\n**No team (not enough teams)**\n")
-                        append(result.unallocated.joinToString("\n") { "| ${escape(it)}" })
+                        append(result.unallocated.joinToString("\n") { "- ${escape(it)}" })
                     }
                 }.take(MessageEmbed.DESCRIPTION_MAX_LENGTH)
             }
