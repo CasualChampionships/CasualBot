@@ -33,4 +33,4 @@ casual_config.json
 
 .env
 bot-state.json
-bot-config.json
+bot-config-local.json

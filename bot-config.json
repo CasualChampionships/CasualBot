@@ -1,28 +1,14 @@
 {
-  "dev": true,
-  "token": "",
-  "loadingMessage": "https://cdn.discordapp.com/emojis/1248373304885248061.gif?size=48&quality=lossless",
-  "databaseLogin": {
-    "name": "",
-    "url": "",
-    "username": "",
-    "password": ""
-  },
-  "guildId": 0,
-  "channelIds": {
-    "wins": 0,
-    "suggestions": 0,
-    "status": 0,
-    "info": 0,
-    "rules": 0
-  },
-  "embeds": [
+  "winsChannel": 1249730801348903004,
+  "suggestionsChannel": 787714882593751090,
+  "statusChannel": 744189879038115910,
+  "spectatorTeam": "Spectator",
+  "groups": [
     {
       "name": "info",
-      "images": [
-        "https://imgur.com/7hAMHkO.png"
-      ],
-      "embeds": [
+      "title": "",
+      "channelId": 812809786319831082,
+      "blocks": [
         {
           "title": "World Border Info",
           "description": "The world border will begin with a size of 6128 x 6128 blocks, centered on 0,0. The world border will shrink in 6 stages. When outside of the world border, you **__will be able__** to break and place blocks. To know which direction you must go in order to exit the border, there will be text across your screen, and an arrow will be rendered below your feet in the direction you should run.",
@@ -70,30 +56,34 @@
         },
         {
           "title": "Spectators",
-          "description": "Members of your server who are not playing are welcome to spectate the game as long as they are following the rules for spectators. Spectators must also use the Discord bot in order to be allowed on the Minecraft server. There will be a `Spectator` option when trying to add yourself to a team.\n\nAdditionally, spectators will be in a new Adventure-Spectator gamemode. You can __double-tap__ your `crouch key` to toggle between no-clip spectator mode or use the gamemode switcher item on your hotbar.",
+          "description": "Members of your server who are not playing are welcome to spectate the game as long as they are following the rules for spectators. Spectators must also use the Discord bot in order to be allowed on the Minecraft server. There will be a `Spectators` option when trying to add yourself to a team.",
           "color": 16753663
         }
+      ],
+      "images": [
+        "https://i.imgur.com/7hAMHkO.png"
       ]
     },
     {
       "name": "faq",
-      "images": [
-        "https://i.imgur.com/XyYbKht.png"
-      ],
-      "embeds": [
+      "title": "",
+      "channelId": 812809786319831082,
+      "blocks": [
         {
           "title": "__Frequently Asked Questions__",
-          "description": "**Q: What time zone is the announcement in?**\n\n**A:** The time is displayed dynamically in your local time zone.\n\n\n**Q: What is client side features can be used?**\n\n**A:** Read the rules. #📃│uhc-rules\n\n\n**Q: How long does a UHC last?**\n\n**A:** Usually around 2 to 2.5 hours.\n\n\n**Q: Can I stream the event?**\n\n**A:** Yes! You are can also share your stream in #📡│share-content\n\n\n**Q: I'm going to be late and miss the start of the event, can I still join?**\n\n**A:** Yes, but there are rules regarding that. Check out #📃│uhc-rules\n\n\n**Q: I need to leave mid-way through the game, can someone sub in for me?**\n\n**A:** No. This will give an unfair advantage towards the other teams.\n\n\n**Q: Help! Why do I see ▯ symbols in game?**\n\n**A:** Your resource packs did not load. Try relogging and if not ping Sensei.\n\n\n**Q:  Can I spectate the game?**\n\n**A:** Yes. Be sure to add yourself to the `Spectator` team using the discord bot and that you have read the rules regarding spectators. \n\n\n**Q: Can xyz server be added to the roster?**\n\n**A:** Sensei and Santa have a list for servers that want to join. Tell xyz's server admin to contact Santa.\n\n\n**Q: When is the next UHC / How often do UHC's happen?**\n\n**A:** The goal is to have one UHC every month. More details will be announced once Sensei and Santa figure out the date. \n\n\n**Q: What version will UHC be in?**\n\n**A:** We will always try to stay in the latest stable version. The version will also be announced when the event details are released. \n\n\n**Q: Why can I not no-clip as a spectator?**\n\n **A:** You are in a new Adventure-Spectator gamemode. You can __double-tap__ your `crouch key` to toggle between no-clip spectator mode or use the gamemode switcher item on your hotbar. \n\n\n**Q: Why does the vanilla spectator teleporting not work?** \n\n**A:** It has been disabled for UHC. Please use `/s` to open a custom GUI for teleporting or `/s <player>` to teleport to a specific player.",
+          "description": "**Q: What time zone is the announcement in?**\n\n**A:** The time is displayed dynamically in your local time zone.\n\n\n**Q: What is client side features can be used?**\n\n**A:** Read the rules. #📃│uhc-rules\n\n\n**Q: How long does a UHC last?**\n\n**A:** Usually around 2 to 2.5 hours.\n\n\n**Q: Can I stream the event?**\n\n**A:** Yes! You are can also share your stream in #📡│share-content\n\n\n**Q: I'm going to be late and miss the start of the event, can I still join?**\n\n**A:** Yes, but there are rules regarding that. Check out #📃│uhc-rules\n\n\n**Q: I need to leave mid-way through the game, can someone sub in for me?**\n\n**A:** No. This will give an unfair advantage towards the other teams.\n\n\n**Q: Help! Why do I see ▯ symbols in game?**\n\n**A:** Your resource packs did not load. Try relogging and if not ping Sensei.\n\n\n**Q:  Can I spectate the game?**\n\n**A:** Yes. Be sure to add yourself to the `Spectators` team using the discord bot and that you have read the rules regarding spectators. \n\n\n**Q: Can xyz server be added to the roster?**\n\n**A:** Sensei and Santa have a list for servers that want to join. Tell xyz's server admin to contact Santa.\n\n\n**Q: When is the next UHC / How often do UHC's happen?**\n\n**A:** The goal is to have one UHC every month. More details will be announced once Sensei and Santa figure out the date. \n\n\n**Q: What version will UHC be in?**\n\n**A:** We will always try to stay in the latest stable version. The version will  also be announced when the event details are released.",
           "color": 11181055
         }
+      ],
+      "images": [
+        "https://i.imgur.com/XyYbKht.png"
       ]
     },
     {
       "name": "rules",
-      "images": [
-        "https://imgur.com/Hbveezq.png"
-      ],
-      "embeds": [
+      "title": "",
+      "channelId": 744168942842413099,
+      "blocks": [
         {
           "title": "Mods and Clients",
           "description": "The use of mods, custom clients, and texture packs should be kept to a minimum in order to make the game fair for everyone. Any features that change the vanilla behavior of the client are not allowed.",
@@ -144,18 +134,23 @@
           "description": "If you are ever unsure about anything please ping Sensei or Santa.",
           "color": 16753663
         }
+      ],
+      "images": [
+        "https://i.imgur.com/Hbveezq.png"
       ]
     },
     {
       "name": "suggestions",
       "title": "",
-      "embeds": [
+      "channelId": null,
+      "blocks": [
         {
           "title": "How To Use Suggestions",
           "description": "**Type Your Suggestion**\nA thread will automatically be created where you can put more details about your suggestion.\n\n**Use Reactions**\nReactions are generally a good way to gauge whether people like the idea of a suggestion. Please don't go over the top with unnecessary reactions, usually :thumbsup: and :thumbsdown: are good enough.\n\n**Feedback**\nFeel free to talk in the thread about the suggestion, but please keep discussions civil.",
           "color": 11181055
         }
-      ]
+      ],
+      "images": []
     }
   ]
 }
