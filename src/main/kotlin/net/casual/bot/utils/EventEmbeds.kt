@@ -268,11 +268,11 @@ object EventEmbeds {
         }
     }
 
-    fun allocate(result: AllocateResult, applied: Boolean): MessageEmbed {
+    fun allocate(result: AllocateResult): MessageEmbed {
         return when (result) {
             is AllocateResult.Allocated -> Embed {
-                title = if (applied) "Teams drawn" else "Preview: teams"
-                color = if (applied) SUCCESS else NEUTRAL
+                title = "Teams drawn"
+                color = SUCCESS
                 description = buildString {
                     append(result.teams.joinToString("\n\n") { allocated ->
                         "**${escape(allocated.team.name)}** (${allocated.players.size})\n" +
@@ -281,9 +281,6 @@ object EventEmbeds {
                     if (result.unallocated.isNotEmpty()) {
                         append("\n\n**No team (not enough teams)**\n")
                         append(result.unallocated.joinToString("\n") { "| ${escape(it)}" })
-                    }
-                    if (!applied) {
-                        append("\n\nNothing has been saved yet.")
                     }
                 }.take(MessageEmbed.DESCRIPTION_MAX_LENGTH)
             }

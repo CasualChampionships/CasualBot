@@ -117,8 +117,9 @@ object CasualBot : CoroutineEventListener {
     }
 
     fun reloadDatabase() {
-        this.database.close()
+        val previous = this.database
         this.database = this.createDatabase()
+        previous.close()
     }
 
     suspend fun reloadCommands() {

@@ -30,7 +30,6 @@ object ConfirmInteractions {
         when (confirmation.action) {
             ConfirmComponents.TEAM_DELETE -> this.deleteTeam(interaction, confirmation.target)
             ConfirmComponents.EVENT_END -> this.endEvent(interaction, confirmation.target)
-            ConfirmComponents.EVENT_ALLOCATE -> this.allocate(interaction, confirmation.choice)
         }
         return true
     }
@@ -65,18 +64,6 @@ object ConfirmInteractions {
                 "Registrations are kept, create a new event when you're ready"
             )
         )
-    }
-
-    private suspend fun allocate(interaction: ButtonInteractionEvent, choice: ConfirmChoice) {
-        if (choice == ConfirmChoice.Retry) {
-            val result = EventService.allocate(apply = false)
-            interaction.editMessageEmbeds(EventEmbeds.allocate(result, applied = false)).await()
-            return
-        }
-
-        val result = EventService.allocate(apply = true)
-        this.replace(interaction, EventEmbeds.allocate(result, applied = true))
-        EventService.activeEvent()?.let { RegistrationPanel.refresh(it) }
     }
 
     private suspend fun replace(interaction: ButtonInteractionEvent, embed: MessageEmbed) {

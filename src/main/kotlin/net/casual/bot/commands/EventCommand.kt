@@ -45,9 +45,7 @@ object EventCommand: Command {
         command.subcommand("players", "List the usernames of everyone who has signed up")
         command.subcommand("open", "Open registration")
         command.subcommand("close", "Close registration")
-        command.subcommand("allocate", "Draw random teams") {
-            option<Boolean>("preview", "Show the draw without saving it. Defaults to true")
-        }
+        command.subcommand("allocate", "Draw random teams")
         command.subcommand("panel", "Post the registration panel in this channel")
         command.subcommand("end", "Finish the event")
     }
@@ -66,7 +64,7 @@ object EventCommand: Command {
             "players" -> this.showPlayers(loading)
             "open" -> this.changeState(EventState.Open, loading)
             "close" -> this.changeState(EventState.Closed, loading)
-            "allocate" -> this.allocate(command, loading)
+            "allocate" -> this.allocate(loading)
             "panel" -> this.postPanel(command, loading)
             "end" -> this.endEvent(command, loading)
         }
@@ -184,33 +182,14 @@ object EventCommand: Command {
         loading.replace(embed)
     }
 
-    private suspend fun allocate(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
-        val preview = command.getOption<Boolean>("preview") ?: true
-        val result = EventService.allocate(apply = !preview)
-
-        if (preview) {
-            loading.replace(
-                content = null,
-                embeds = listOf(EventEmbeds.allocate(result, applied = false)),
-                components = listOf(
-                    ConfirmComponents.buttons(
-                        ConfirmComponents.EVENT_ALLOCATE,
-                        "draw",
-                        command.user.idLong,
-                        confirmLabel = "Save these teams",
-                        danger = false,
-                        retryLabel = "Reshuffle"
-                    )
-                )
-            )
-            return
-        }
+    private suspend fun allocate(loading: LoadingMessage) {
+        val result = EventService.allocate(apply = true)
 
         val event = EventService.activeEvent()
         if (event != null) {
             RegistrationPanel.refresh(event)
         }
-        loading.replace(EventEmbeds.allocate(result, applied = true))
+        loading.replace(EventEmbeds.allocate(result))
     }
 
     private suspend fun postPanel(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
