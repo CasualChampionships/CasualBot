@@ -27,7 +27,6 @@ object EventEmbeds {
 
     private const val STATUS_DRIFT_LIMIT = 20
     private const val DRIFT_LIMIT = 40
-    private const val REGISTER_INSTEAD = "Use **Register** if you want to play instead."
 
     fun escape(text: String): String {
         return MarkdownSanitizer.sanitize(text, MarkdownSanitizer.SanitizationStrategy.ESCAPE)
@@ -117,15 +116,11 @@ object EventEmbeds {
                 color = NEUTRAL
                 description = buildString {
                     if (result.wasPlaying) {
-                        append("You've been taken off your team.\n")
+                        append("You've been removed from your team.\n")
                     }
-                    append(REGISTER_INSTEAD)
                 }
             }
-            is SpectateResult.AlreadySpectating -> this.notice(
-                "You're already spectating",
-                REGISTER_INSTEAD
-            )
+            is SpectateResult.AlreadySpectating -> this.notice("You're already spectating", "Use **Register** if you want to play instead.")
             SpectateResult.NeedsUsername -> this.needsUsername()
             is SpectateResult.UnknownUsername -> this.unknownUsername(result.username)
             is SpectateResult.UsernameTaken -> this.usernameTaken(result.username, result.discordId)
@@ -142,7 +137,7 @@ object EventEmbeds {
             is EventUnavailable.NotAccepting -> when {
                 result.archived -> this.failure(
                     "That event has finished",
-                    "Watch for the next one to be announced."
+                    "You'll have to wait for the next event to participate."
                 )
                 else -> this.failure(
                     "Registration is closed",
@@ -206,7 +201,6 @@ object EventEmbeds {
             color = NEUTRAL
             description = buildString {
                 append(header(event))
-                append("**${players.total}** signed up\n")
                 append(nameBlock("Playing", players.playing))
                 append(nameBlock("Spectating", players.spectating))
             }.take(MessageEmbed.DESCRIPTION_MAX_LENGTH)
