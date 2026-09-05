@@ -6,10 +6,7 @@ import dev.minn.jda.ktx.interactions.components.getOption
 import net.casual.bot.CasualBot
 import net.casual.bot.database.BotDatabase.registrationOf
 import net.casual.bot.database.BotEvent
-import net.casual.bot.database.Registration
-import net.casual.bot.database.BotRegistrations
 import net.casual.bot.event.EventService
-import net.casual.bot.panel.RegistrationPanel
 import net.casual.bot.utils.CommandUtils
 import net.casual.bot.utils.CommandUtils.canModifyTeam
 import net.casual.bot.utils.CommandUtils.isOrganizer
@@ -26,8 +23,6 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
-import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.eq
 
 object TeamCommand: Command {
     private const val COLOUR_EXAMPLE = "#55FFFF"
@@ -205,7 +200,7 @@ object TeamCommand: Command {
 
         val result = EventService.join(event.user.idLong, team, event.isOrganizer())
         loading.replace(EventEmbeds.join(result))
-        EventService.activeEvent()?.let { RegistrationPanel.refresh(it) }
+        EventService.activeEvent()?.let { EventService.rosterChanged(it) }
     }
 
     private suspend fun addPlayer(event: GenericCommandInteractionEvent, loading: LoadingMessage) {
@@ -227,7 +222,7 @@ object TeamCommand: Command {
         loading.replace(
             EventEmbeds.add(EventService.addPlayer(player, team, user?.idLong, organizer))
         )
-        RegistrationPanel.refresh(target)
+        EventService.rosterChanged(target)
     }
 
     private suspend fun removePlayer(event: GenericCommandInteractionEvent, loading: LoadingMessage) {
@@ -247,7 +242,7 @@ object TeamCommand: Command {
         }
 
         loading.replace(EventEmbeds.remove(EventService.removePlayer(player, organizer)))
-        RegistrationPanel.refresh(target)
+        EventService.rosterChanged(target)
     }
 
     private suspend fun clearTeam(event: GenericCommandInteractionEvent, loading: LoadingMessage) {
@@ -257,27 +252,15 @@ object TeamCommand: Command {
             return
         }
 
-        val target = this.requireEvent(loading, event.isOrganizer()) ?: return
+        val organizer = event.isOrganizer()
+        val target = this.requireEvent(loading, organizer) ?: return
         if (!event.canModifyTeam(team)) {
             loading.replace(this.notOnTeam(team))
             return
         }
 
-        val cleared = CasualBot.database.transaction {
-            val registrations = Registration.find {
-                (BotRegistrations.event eq target.id) and (BotRegistrations.team eq team.id)
-            }.toList()
-            registrations.forEach { it.delete() }
-            registrations.size
-        }
-
-        loading.replace(
-            EventEmbeds.notice(
-                "Cleared ${EventEmbeds.escape(team.name)}",
-                "$cleared registration(s) removed"
-            )
-        )
-        RegistrationPanel.refresh(target)
+        loading.replace(EventEmbeds.clear(EventService.clearTeam(team, organizer)))
+        EventService.rosterChanged(target)
     }
 
     private suspend fun teamInfo(event: GenericCommandInteractionEvent, loading: LoadingMessage) {

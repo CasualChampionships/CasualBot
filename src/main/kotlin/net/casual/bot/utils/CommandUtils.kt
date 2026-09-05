@@ -60,7 +60,7 @@ object CommandUtils {
     fun addEventOption(data: SubcommandData, events: List<Event>) {
         data.option<String>("event", "The event you want to display the scoreboard for") {
             for (event in events) {
-                choice(event.name, event.name)
+                choice(event.name.toDisplayName(), event.name)
             }
         }
     }

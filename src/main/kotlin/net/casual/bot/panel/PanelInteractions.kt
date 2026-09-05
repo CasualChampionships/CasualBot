@@ -38,7 +38,7 @@ object PanelInteractions {
         }
 
         hook.editOriginalEmbeds(embed).await()
-        RegistrationPanel.refresh(event)
+        EventService.rosterChanged(event)
     }
 
     suspend fun onModal(interaction: ModalInteractionEvent) {
@@ -64,7 +64,7 @@ object PanelInteractions {
         }
 
         hook.editOriginalEmbeds(embed).await()
-        RegistrationPanel.refresh(event)
+        EventService.rosterChanged(event)
     }
 
     private suspend fun resolveEvent(interaction: IReplyCallback, eventId: Int): BotEvent? {

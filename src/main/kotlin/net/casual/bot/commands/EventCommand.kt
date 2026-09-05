@@ -13,6 +13,7 @@ import net.casual.bot.utils.CommandUtils
 import net.casual.bot.utils.CommandUtils.isOrganizer
 import net.casual.bot.utils.EventEmbeds
 import net.casual.bot.utils.impl.LoadingMessage
+import net.casual.bot.utils.toEventName
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
@@ -80,17 +81,23 @@ object EventCommand: Command {
         }
 
         val mode = EventMode.valueOf(command.getOption<String>("mode")!!)
-        val name = command.getOption<String>("name")!!
+        val name = command.getOption<String>("name")!!.toEventName()
+        if (name.isEmpty()) {
+            loading.replace(
+                EventEmbeds.failure("That name can't be used", "")
+            )
+            return
+        }
         val previous = EventService.activeEvent()
         val event = EventService.createEvent(name, mode, teamSize)
 
         loading.replace(
             EventEmbeds.notice(
-                "Created ${EventEmbeds.escape(event.name)}",
+                "Created ${EventEmbeds.escape(event.displayName)}",
                 buildString {
                     append("${EventEmbeds.modeLabel(mode)}, teams of **$teamSize**.\n")
                     if (previous != null) {
-                        append("**${EventEmbeds.escape(previous.name)}** has been archived.\n")
+                        append("**${EventEmbeds.escape(previous.displayName)}** has been archived.\n")
                     }
                     append("\nRegistration is closed. Use `/event open` when you're ready, ")
                     append("then `/event panel` to post the sign-up panel")
@@ -121,13 +128,13 @@ object EventCommand: Command {
         loading.replace(
             EventEmbeds.add(EventService.addPlayer(player, team, user?.idLong, force = true))
         )
-        event?.let { RegistrationPanel.refresh(it) }
+        event?.let { EventService.rosterChanged(it) }
     }
 
     private suspend fun unregisterOther(command: GenericCommandInteractionEvent, loading: LoadingMessage) {
         val player = CommandUtils.getPlayer(command, loading) ?: return
         loading.replace(EventEmbeds.remove(EventService.removePlayer(player, force = true)))
-        EventService.latestEvent()?.let { RegistrationPanel.refresh(it) }
+        EventService.latestEvent()?.let { EventService.rosterChanged(it) }
     }
 
     private suspend fun showStatus(loading: LoadingMessage) {
@@ -157,7 +164,7 @@ object EventCommand: Command {
             loading.replace(
                 EventEmbeds.notice(
                     "Nobody has signed up",
-                    "No one is registered for **${EventEmbeds.escape(event.name)}** yet"
+                    "No one is registered for **${EventEmbeds.escape(event.displayName)}** yet"
                 )
             )
             return
@@ -172,7 +179,7 @@ object EventCommand: Command {
             return
         }
         EventService.setState(event, state)
-        RegistrationPanel.refresh(event)
+        EventService.rosterChanged(event)
 
         val embed = if (state == EventState.Open) {
             EventEmbeds.notice("Registration is open", "Players can sign up now")
@@ -187,7 +194,7 @@ object EventCommand: Command {
 
         val event = EventService.activeEvent()
         if (event != null) {
-            RegistrationPanel.refresh(event)
+            EventService.rosterChanged(event)
         }
         loading.replace(EventEmbeds.allocate(result))
     }
@@ -224,7 +231,7 @@ object EventCommand: Command {
             content = null,
             embeds = listOf(
                 EventEmbeds.notice(
-                    "Finish ${EventEmbeds.escape(event.name)}?",
+                    "Finish ${EventEmbeds.escape(event.displayName)}?",
                     "Registrations are kept, but nobody will be able to join and the panel stops working"
                 )
             ),

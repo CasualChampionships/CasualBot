@@ -39,7 +39,7 @@ sealed interface SpectateResult {
 
 sealed interface EventUnavailable:
     RegisterResult, LeaveResult, SpectateResult, JoinResult,
-    AllocateResult, AddResult, RemoveResult {
+    AllocateResult, AddResult, RemoveResult, ClearResult {
     data object NoActiveEvent: EventUnavailable
     data class NotAccepting(val state: EventState, val archived: Boolean): EventUnavailable
 }
@@ -110,6 +110,11 @@ data class EventSummary(
     val rosters: List<TeamRoster>
 ) {
     val spotsRemaining: Int get() = (this.capacity - this.playing).coerceAtLeast(0)
+}
+
+sealed interface ClearResult {
+    data class Cleared(val team: DiscordTeam, val removed: Int): ClearResult
+    data class Empty(val team: DiscordTeam): ClearResult
 }
 
 sealed interface Drift {

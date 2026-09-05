@@ -8,7 +8,6 @@ import net.casual.bot.CasualBot
 import net.casual.bot.database.BotDatabase.linkedPlayer
 import net.casual.bot.database.BotDatabase.registrationOf
 import net.casual.bot.event.EventService
-import net.casual.bot.panel.RegistrationPanel
 import net.casual.bot.utils.EventEmbeds
 import net.casual.bot.utils.impl.LoadingMessage
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -50,7 +49,7 @@ object MeCommand: Command {
         loading.replace(embed)
 
         if (command.subcommandName != "status") {
-            EventService.activeEvent()?.let { RegistrationPanel.refresh(it) }
+            EventService.activeEvent()?.let { EventService.rosterChanged(it) }
         }
     }
 
@@ -64,7 +63,7 @@ object MeCommand: Command {
             title = "Your status"
             color = EventEmbeds.NEUTRAL
             description = buildString {
-                append("Event: **${EventEmbeds.escape(event.name)}** (${EventEmbeds.stateLabel(event)})\n")
+                append("Event: **${EventEmbeds.escape(event.displayName)}** (${EventEmbeds.stateLabel(event)})\n")
                 append("Minecraft account: ")
                 append(if (linked == null) "**not linked yet**" else "**${EventEmbeds.escape(linked.name)}**")
                 append("\n")

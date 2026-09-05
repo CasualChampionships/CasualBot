@@ -3,7 +3,6 @@ package net.casual.bot.commands
 import dev.minn.jda.ktx.coroutines.await
 import net.casual.bot.CasualBot
 import net.casual.bot.event.EventService
-import net.casual.bot.panel.RegistrationPanel
 import net.casual.bot.utils.EventEmbeds
 import net.casual.database.DiscordTeam
 import net.dv8tion.jda.api.entities.MessageEmbed
@@ -45,7 +44,7 @@ object ConfirmInteractions {
         val name = team.name
         CasualBot.database.transaction { team.delete() }
         this.replace(interaction, EventEmbeds.notice("Deleted ${EventEmbeds.escape(name)}", "The team has been removed"))
-        EventService.activeEvent()?.let { RegistrationPanel.refresh(it) }
+        EventService.activeEvent()?.let { EventService.rosterChanged(it) }
     }
 
     private suspend fun endEvent(interaction: ButtonInteractionEvent, target: String) {
@@ -56,11 +55,11 @@ object ConfirmInteractions {
         }
 
         EventService.archive(event)
-        RegistrationPanel.refresh(event)
+        EventService.rosterChanged(event)
         this.replace(
             interaction,
             EventEmbeds.notice(
-                "Finished ${EventEmbeds.escape(event.name)}",
+                "Finished ${EventEmbeds.escape(event.displayName)}",
                 "Registrations are kept, create a new event when you're ready"
             )
         )

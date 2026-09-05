@@ -14,11 +14,15 @@ import net.casual.bot.database.BotDatabase.linkPlayer
 import net.casual.bot.database.BotDatabase.linkedDiscordId
 import net.casual.bot.database.BotDatabase.linkedPlayer
 import net.casual.bot.database.BotDatabase.registrationOf
+import net.casual.bot.panel.RegistrationPanel
 import net.casual.bot.utils.DatabaseUtils.getOrCreateDiscordPlayer
+import net.casual.bot.utils.toEventName
 import net.casual.database.DiscordPlayer
+import net.casual.database.DiscordPlayers
 import net.casual.database.DiscordTeam
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNotNull
 import java.time.Instant
 
 object EventService {
@@ -39,7 +43,7 @@ object EventService {
             BotEvent.find { BotEvents.archived eq false }.forEach { it.archived = true }
 
             BotEvent.new {
-                this.name = name
+                this.name = name.toEventName()
                 this.mode = mode
                 this.state = EventState.Closed
                 this.teamSize = teamSize
@@ -349,6 +353,9 @@ object EventService {
 
     fun removePlayer(player: DiscordPlayer, force: Boolean = false): RemoveResult {
         val event = this.editableEvent(force) ?: return EventUnavailable.NoActiveEvent
+        if (!force && !event.acceptingRegistrations) {
+            return EventUnavailable.NotAccepting(event.state, event.archived)
+        }
         val registration = CasualBot.database.registrationOf(event, player)
             ?: return RemoveResult.NotRegistered(player.name)
 
@@ -357,6 +364,58 @@ object EventService {
             registration.delete()
             RemoveResult.Removed(player.name, team)
         }
+    }
+
+    fun clearTeam(team: DiscordTeam, force: Boolean = false): ClearResult {
+        val event = this.editableEvent(force) ?: return EventUnavailable.NoActiveEvent
+        if (!force && !event.acceptingRegistrations) {
+            return EventUnavailable.NotAccepting(event.state, event.archived)
+        }
+
+        return CasualBot.database.transaction {
+            val registrations = Registration.find {
+                (BotRegistrations.event eq event.id) and (BotRegistrations.team eq team.id)
+            }.toList()
+            if (registrations.isEmpty()) {
+                return@transaction ClearResult.Empty(team)
+            }
+            registrations.forEach { it.delete() }
+            ClearResult.Cleared(team, registrations.size)
+        }
+    }
+
+    fun syncTeamLinks(event: BotEvent): Int {
+        return CasualBot.database.transaction { linkTeams(event) }
+    }
+
+    fun linkTeams(event: BotEvent): Int {
+        val registrations = event.registrations.toList()
+        val registered = registrations.map { it.player.id }.toSet()
+        var changed = 0
+
+        for (registration in registrations) {
+            val player = registration.player
+            val team = if (registration.spectating) null else registration.team
+            if (player.team?.id != team?.id) {
+                player.team = team
+                changed++
+            }
+        }
+
+        for (player in DiscordPlayer.find { DiscordPlayers.team.isNotNull() }) {
+            if (player.id !in registered) {
+                player.team = null
+                changed++
+            }
+        }
+        return changed
+    }
+
+    suspend fun rosterChanged(event: BotEvent) {
+        runCatching { this.syncTeamLinks(event) }.onFailure {
+            CasualBot.logger.error(it) { "Failed to sync team links for ${event.name}" }
+        }
+        RegistrationPanel.refresh(event)
     }
 
     fun roster(team: DiscordTeam): List<String>? {

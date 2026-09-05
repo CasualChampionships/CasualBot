@@ -47,7 +47,8 @@ data class BotConfigData(
 }
 
 object BotConfig {
-    private val path = Path.of("bot-config.json")
+    private val path
+        get() = if (CasualBot.env.local) Path.of("bot-config-local.json") else Path.of("bot-config.json")
 
     private val json = Json {
         encodeDefaults = true

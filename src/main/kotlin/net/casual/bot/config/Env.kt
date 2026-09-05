@@ -25,7 +25,9 @@ data class Env(
     @SerialName("GUILD_ID")
     val guildId: Long = 0,
     @SerialName("ORGANIZER_ID")
-    val organizerId: Long = 0L
+    val organizerId: Long = 0L,
+    @SerialName("LOCAL")
+    val local: Boolean = false
 ) {
     companion object {
         @OptIn(ExperimentalSerializationApi::class)

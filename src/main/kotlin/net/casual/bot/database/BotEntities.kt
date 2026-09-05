@@ -1,5 +1,6 @@
 package net.casual.bot.database
 
+import net.casual.bot.utils.toDisplayName
 import net.casual.database.DiscordPlayer
 import net.casual.database.DiscordTeam
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -19,6 +20,9 @@ class BotEvent(id: EntityID<Int>): IntEntity(id) {
     var createdAt by BotEvents.createdAt
 
     val registrations by Registration referrersOn BotRegistrations.event
+
+    val displayName: String
+        get() = this.name.toDisplayName()
 
     val acceptingRegistrations: Boolean
         get() = !archived && state == EventState.Open

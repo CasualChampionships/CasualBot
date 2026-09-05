@@ -6,6 +6,7 @@ import net.casual.bot.database.EventMode
 import net.casual.bot.database.EventState
 import net.casual.bot.event.AddResult
 import net.casual.bot.event.AllocateResult
+import net.casual.bot.event.ClearResult
 import net.casual.bot.event.Drift
 import net.casual.bot.event.EventSummary
 import net.casual.bot.event.JoinResult
@@ -154,7 +155,7 @@ object EventEmbeds {
     fun panel(summary: EventSummary): MessageEmbed {
         val event = summary.event
         return Embed {
-            title = escape(event.name)
+            title = escape(event.displayName)
             color = if (event.acceptingRegistrations) SUCCESS else NEUTRAL
             description = buildString {
                 append(header(event))
@@ -197,7 +198,7 @@ object EventEmbeds {
 
     fun players(event: BotEvent, players: RegisteredPlayers): MessageEmbed {
         return Embed {
-            title = escape(event.name)
+            title = escape(event.displayName)
             color = NEUTRAL
             description = buildString {
                 append(header(event))
@@ -210,7 +211,7 @@ object EventEmbeds {
     fun status(summary: EventSummary, drift: List<Drift>): MessageEmbed {
         val event = summary.event
         return Embed {
-            title = escape(event.name)
+            title = escape(event.displayName)
             color = if (drift.isEmpty()) NEUTRAL else WARNING
             description = buildString {
                 append(header(event))
@@ -282,9 +283,9 @@ object EventEmbeds {
                 "This event doesn't randomize teams",
                 when (result.event.mode) {
                     EventMode.Servers ->
-                        "**${this.escape(result.event.name)}** takes teams from Discord roles, so there's nothing to draw."
+                        "**${this.escape(result.event.displayName)}** takes teams from Discord roles, so there's nothing to draw."
                     else ->
-                        "**${this.escape(result.event.name)}** lets players pick their own teams, so there's nothing to draw."
+                        "**${this.escape(result.event.displayName)}** lets players pick their own teams, so there's nothing to draw."
                 }
             )
             AllocateResult.NoPlayers -> this.failure("Nobody has registered", "There's nobody to put on a team.")
@@ -317,9 +318,9 @@ object EventEmbeds {
                 "You can't pick your own team",
                 when (result.event.mode) {
                     EventMode.Servers ->
-                        "**${this.escape(result.event.name)}** takes teams from Discord roles."
+                        "**${this.escape(result.event.displayName)}** takes teams from Discord roles."
                     else ->
-                        "**${this.escape(result.event.name)}** draws teams randomly before the event."
+                        "**${this.escape(result.event.displayName)}** draws teams randomly before the event."
                 }
             )
             JoinResult.NotRegistered -> this.failure(
@@ -388,6 +389,20 @@ object EventEmbeds {
             is RemoveResult.NotRegistered -> this.notice(
                 "${this.escape(result.username)} isn't registered",
                 "There's nothing to remove."
+            )
+            is EventUnavailable -> this.unavailable(result)
+        }
+    }
+
+    fun clear(result: ClearResult): MessageEmbed {
+        return when (result) {
+            is ClearResult.Cleared -> this.notice(
+                "Cleared ${this.escape(result.team.name)}",
+                "${result.removed} registration(s) removed."
+            )
+            is ClearResult.Empty -> this.notice(
+                "${this.escape(result.team.name)} is already empty",
+                "There's nobody registered for that team."
             )
             is EventUnavailable -> this.unavailable(result)
         }

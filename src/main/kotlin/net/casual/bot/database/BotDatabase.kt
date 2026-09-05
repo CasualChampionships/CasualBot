@@ -14,7 +14,9 @@ import org.jetbrains.exposed.v1.jdbc.update
 object BotDatabase {
     fun CasualDatabase.initializeBotTables() {
         transaction {
-            SchemaUtils.create(BotEvents, BotRegistrations, BotPlayerLinks)
+            SchemaUtils.createMissingTablesAndColumns(
+                BotEvents, BotRegistrations, BotPlayerLinks
+            )
             Migrations.migrate()
         }
     }
