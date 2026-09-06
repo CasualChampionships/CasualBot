@@ -55,7 +55,7 @@ import org.jetbrains.exposed.v1.core.statements.expandArgs
 import java.net.SocketTimeoutException
 import java.time.ZoneId
 
-
+// Santa smells
 object CasualBot : CoroutineEventListener {
     private const val SUGGESTIONS_HISTORY = 50
 
